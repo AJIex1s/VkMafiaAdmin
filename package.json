@@ -1,0 +1,11 @@
+{
+  	"name": "voting-app",
+  	"version": "1.0.0",
+  	"description": "voting",
+  	"main": "index.html",
+ 	"author": "AJIex1s",
+	"node-remote": "*://oauth.vk.com/*",
+  	"window": {
+		"toolbar": false
+ 	 }
+}

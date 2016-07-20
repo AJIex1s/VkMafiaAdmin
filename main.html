@@ -1,0 +1,44 @@
+﻿<html>
+<head>
+    <script type="text/javascript" src="scripts/utils/utils.js"></script>
+    <script type="text/javascript" src="scripts/app.js"></script>
+    <link href="stylesheets/main.css"/>
+    <style>
+        #logList tr td {
+            border: 1px solid;
+            padding: 5px 10px;
+        }
+
+        #sendWarningBtn {
+            padding-left: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <input type="text" id="votingLink"/>
+    <input type="button" value="get users info" id="prepareUsersInfo" class="btn"/><br/>
+    <span> Getting info status: </span> <span id="infoStatus"></span>
+    <br/><br/>
+    <input type="button" value="send warning" id="sendWarningBtn" class="btn"/>
+    <br/><br/><br/>
+
+    <div id='loadingDiv' style="display: none;position: absolute; top:0; left: 0; width: 100%; height: 100%; z-index: 1; background: rgba(0,0,0, 0.2);">
+        <div id="inner" style=" position:absolute; background:white; margin-left: 40%; margin-top: 200px;  width: 20%; height: 100px; z-index: 9;">
+            Please wait... <img src=''/>
+        </div>
+    </div>
+    <table id="logList" style="border: 1px solid; border-collapse: collapse;">
+        <tr>
+            <td>ID</td>
+            <td>Имя нехорошего человека</td>
+            <td>Статус отсылки сообщения</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
