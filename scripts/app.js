@@ -4,11 +4,17 @@ var setVotedUsersCount = function (count) {
     var votedUsersLabel = document.getElementById("infoStatus");
     votedUsersLabel.innerText = count;
 }
-
+var initApp = function () {
+    var helper = new PollHelper(token, "");
+}
 document.addEventListener('DOMContentLoaded', function() {
     var prepareUsersInfoBtn = document.getElementById("prepareUsersInfo");
     prepareUsersInfoBtn.onclick = function (e) {
-        var poll = new Poll("-83223612_893");
+        var postUrl = document.getElementById("votingLink").value;
+        var postId = postUrl.split("w=poll")[1];
+        if(!Utils.IsExists(postId) || postId == "")
+            postId = "-83223612_893"; // return alert("enter post address");
+        var poll = new Poll(postId);
         poll.receiveVotedUsers(function () {
             for (var i = 0; i < poll.votedUsers.length; i++) {
                console.log(poll.votedUsers[i].name);
@@ -96,10 +102,28 @@ var Poll = function (postId) {
     this.answerIds = [];
     this.pollId = -1;
     this.votedUsers = [];
+    this.loading = null;
     this.Initialize();
 }
 Poll.prototype = {
     Initialize: function () {
+        this.receiveVotedUsers();
+    },
+    ReceivePollData: function () {
+        this.receiveAnswers();
+    },
+    createLoadingPanel: function () {
+        var userTable = document.getElementById();
+        var panel = document.createElement("DIV");
+        var panelImg = document.createElement("IMG");
+        panel.id = "lpInternal";
+        panelImg.setAttribute("src", "../img/loading.gif");
+        panel.appendChild(panelImg);
+        return panel;
+    },
+    GetCreateLoadingPanel: function () {
+        if(!this.loading)
+            this.loading = this.createLoadingPanel();
     },
     GetPostId: function () {
         return this.postId || -1;
@@ -168,7 +192,7 @@ Poll.prototype = {
 }
 
 
-var VotingHelper = function (token) {
+var PollHelper = function (token, pollURL) {
     this.token = token;
     this.votedUserNames = [];
     this.notVotedUses = {};
@@ -176,11 +200,29 @@ var VotingHelper = function (token) {
     this.infoStatusElement = null;
     this.votingLinkInputElement = null;
     this.defaultVotingLink = "https://vk.com/corleone_cat?w=poll-83223612_891";
-    this.pollHelper = null;
+    this.poll = new Poll(pollURL);
     this.users = [];
+    //evt
 }
-VotingHelper.prototype = {
+PollHelper.prototype = {
     Initialize: function () {
+        this.generateUserList();
+
+    },
+    getInfoStatusElement: function () {
+        if(!Utils.IsExists(this.infoStatusElement))
+            this.infoStatusElement = document.getElementById("infoStatus");
+        return this.infoStatusElement;
+    },
+    getVotingLinkInputElement: function () {
+        if(!Utils.IsExists(this.votingLinkInputElement))
+            this.votingLinkInputElement = document.getElementById("votingLinkInput");
+        return this.votingLinkInputElement;
+    },
+    getInfoStatusElement: function () {
+        if(!Utils.IsExists(this.infoStatusElement))
+            this.infoStatusElement = document.getElementById("infoStatus");
+        return this.infoStatusElement;
     },
     generateUserList: function () {
         for (var userName in baseUserList) {
