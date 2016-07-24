@@ -1,28 +1,9 @@
 var url = require('url');
-var token = url.parse(window.location.href, true).query["access_token"];
-var setVotedUsersCount = function (count) {
-    var votedUsersLabel = document.getElementById("infoStatus");
-    votedUsersLabel.innerText = count;
-}
-var initApp = function () {
-    var helper = new PollHelper(token, "");
-}
-document.addEventListener('DOMContentLoaded', function() {
-    var prepareUsersInfoBtn = document.getElementById("prepareUsersInfo");
-    prepareUsersInfoBtn.onclick = function (e) {
-        var postUrl = document.getElementById("votingLink").value;
-        var postId = postUrl.split("w=poll")[1];
-        if(!Utils.IsExists(postId) || postId == "")
-            postId = "-83223612_893"; // return alert("enter post address");
-        var poll = new Poll(postId);
-        poll.receiveVotedUsers(function () {
-            for (var i = 0; i < poll.votedUsers.length; i++) {
-               console.log(poll.votedUsers[i].name);
-            }
-        });
-        window.poll = poll;
-    }
 
+var token = url.parse(window.location.href, true).query["access_token"];
+document.addEventListener('DOMContentLoaded', function() {
+    var helper = new PollHelper(token);
+    window.pollHelper = helper;
 }, false);
 // (function() {
 var VotingNameSpace = {};
@@ -75,7 +56,7 @@ User.prototype = {
     Initialize: function () {
         if (this.isInitialIdNumeric()) {
             this.numericID = this.ID;
-        } else this.getNumericId();
+        }
     },
     isInitialIdNumeric: function () {
         return this.initialID[0] == 'i' && this.initialID[1] == 'd';
@@ -100,79 +81,50 @@ var Poll = function (postId) {
     this.answersRequest = "https://api.vk.com/method/wall.getById?posts=" + this.postId
         + "&extended=1&copy_history_depth=2&v=5.52&access_token=" + token;
     this.answerIds = [];
+    this.answers = [];
     this.pollId = -1;
     this.votedUsers = [];
-    this.loading = null;
     this.Initialize();
-}
+};
 Poll.prototype = {
     Initialize: function () {
-        this.receiveVotedUsers();
     },
-    ReceivePollData: function () {
-        this.receiveAnswers();
-    },
-    createLoadingPanel: function () {
-        var userTable = document.getElementById();
-        var panel = document.createElement("DIV");
-        var panelImg = document.createElement("IMG");
-        panel.id = "lpInternal";
-        panelImg.setAttribute("src", "../img/loading.gif");
-        panel.appendChild(panelImg);
-        return panel;
-    },
-    GetCreateLoadingPanel: function () {
-        if(!this.loading)
-            this.loading = this.createLoadingPanel();
-    },
+
     GetPostId: function () {
         return this.postId || -1;
     },
-    receiveAnswers: function (callback) {
+    fillAnswers: function (answers) {
+        for (var i = 0; i < answers.length; i++) {
+            this.answers.push(answers[i]);
+        }
+    },
+    receivePollData: function (callback) {
         var pollObj = this;
-        Utils.sendRequest(pollObj.answersRequest, function (msg) {
+        Utils.sendRequest(this.answersRequest, function (msg) {
             if (!msg || !msg.response) {
                 console.log(msg);
                 return alert("error by answers request");
             }
-
             var poll = msg.response.items[0].attachments[0].poll;
-            var answers = poll.answers;
-            pollObj.SetPollId(poll.id);
-            for (var i = 0; i < answers.length; i++) {
-                pollObj.answerIds.push(answers[i].id);
-            }
-            if (Utils.IsExists(callback) && Utils.isFunction(callback))
-                callback();
-        });
+            this.SetPollId(poll.id);
+            this.fillAnswers(poll.answers);
+            Utils.sendRequest(this.getCreateVotingRequestUrl(), function (msg) {
+                this.votedUsers = this.getCreateVotedUsers(msg);
+                if (Utils.IsExists(callback) && Utils.isFunction(callback))
+                    callback();
+            }.bind(this));
+        }.bind(this));
     },
     getCreateVotedUsers: function (msg) {
-        var all_users = [];
-        for (var j = 0; j < msg.response.length; j++) {
+        var result = []
+        for(var j = 0; j < msg.response.length; j++){
             var users = msg.response[j].users.items;
-            all_users = all_users.concat(users.slice());
+            for(var i = 0; i < users.length; i++) {
+                var userObj = new User(users[i].id, users[i].first_name + " " + users[i].last_name);
+                result.push(userObj);
+            }
         }
-        return function (votedUsers, callback) {
-            var userCreateIntervalId = setInterval(function () {
-                var user = all_users.pop();
-                if(!user){
-                    if (Utils.IsExists(callback) && Utils.isFunction(callback))
-                        callback();
-                    clearInterval(userCreateIntervalId);
-                    return;
-                }
-                var userObj = new User(user.id, user.first_name + " " + user.last_name);
-                votedUsers.push(userObj);
-            }, 500);
-        };
-    },
-    receiveVotedUsers: function (callback) {
-        var pollObj = this;
-        this.receiveAnswers(function () {
-            Utils.sendRequest(pollObj.getCreateVotingRequestUrl(), function (msg) {
-                pollObj.getCreateVotedUsers(msg)(pollObj.votedUsers, callback);
-            });
-        });
+        return result;
     },
     getCreateVotingRequestUrl: function () {
         return "https://api.vk.com/method/polls.getVoters?owner_id=" + this.ownerId +
@@ -180,8 +132,13 @@ Poll.prototype = {
             "&fields=nickname&name_case=nom&v=5.52&access_token=" + token;
     },
     //setters getters
+    getAnswerIds: function () {
+        if(!this.answerIds || this.answerIds.length < 1)
+            this.answerIds = this.answers.map(function(answer){return answer.id});
+        return this.answerIds;
+    },
     getAnswerIdsAsString: function () {
-        return this.answerIds.toString();
+        return this.getAnswerIds().toString();
     },
     SetPollId: function (pollId) {
         this.pollId = pollId;
@@ -189,51 +146,108 @@ Poll.prototype = {
     GetPollId: function () {
         return this.pollId;
     }
-}
+};
 
 
-var PollHelper = function (token, pollURL) {
+var PollHelper = function (token) {
     this.token = token;
     this.votedUserNames = [];
     this.notVotedUses = {};
     this.linkSplitter = "w=poll";
     this.infoStatusElement = null;
     this.votingLinkInputElement = null;
+    this.sendWarningButton = null;
+    this.prepareUsersInfoButton = null;
     this.defaultVotingLink = "https://vk.com/corleone_cat?w=poll-83223612_891";
-    this.poll = new Poll(pollURL);
+    this.poll = null;
     this.users = [];
+    this.loadingPanelElment = null;
+    this.loadingOverlayElment = null;
     //evt
-}
+    this.Initialize();
+};
 PollHelper.prototype = {
     Initialize: function () {
-        this.generateUserList();
-
+        //this.generateUserList();
+        //events
+        Utils.AddEveventHandlerToElement(this.getPrepareUsersInfoBtn(), "click", this.OnPrepareUsersInfoButtonClick.bind(this));
+        Utils.AddEveventHandlerToElement(this.getSendWarningButton(), "click", this.OnSendWarningButtonClick.bind(this));
     },
-    getInfoStatusElement: function () {
-        if(!Utils.IsExists(this.infoStatusElement))
-            this.infoStatusElement = document.getElementById("infoStatus");
-        return this.infoStatusElement;
+    getLoadingOverlayElement: function () {
+        if(!this.loadingOverlayElment)
+            this.loadingOverlayElment = document.getElementById("loadingOverlay");
+        return this.loadingOverlayElment;
     },
-    getVotingLinkInputElement: function () {
-        if(!Utils.IsExists(this.votingLinkInputElement))
-            this.votingLinkInputElement = document.getElementById("votingLinkInput");
-        return this.votingLinkInputElement;
+    getLoadingPanelElement: function () {
+        if(!this.loadingPanelElment)
+            this.loadingPanelElment = document.getElementById("loadingPanel");
+        return this.loadingPanelElment;
     },
-    getInfoStatusElement: function () {
-        if(!Utils.IsExists(this.infoStatusElement))
-            this.infoStatusElement = document.getElementById("infoStatus");
-        return this.infoStatusElement;
+    toggleLoadingPanel: function () {
+        Utils.toggleElement(this.getLoadingOverlayElement());
+        Utils.toggleElement(this.getLoadingPanelElement());
     },
     generateUserList: function () {
-        for (var userName in baseUserList) {
+        this.toggleLoadingPanel();
+        var tempUserNames = Object.keys(baseUserList);
+        var helperObj = this;
+        var userCreateIntervalId = setInterval(function () {
+            var userName = tempUserNames.pop();
+            if(!userName) {
+                helperObj.toggleLoadingPanel();
+                clearInterval(userCreateIntervalId);
+                return;
+            }
             var user = new User(baseUserList[userName], userName);
-            this.users.push(user);
-        }
+            helperObj.users.push(user);
+        }, 200);
     },
     GetUsers: function () {
-        if (!Utils.IsExists(this.users))
+        if (!Utils.IsExists(this.users) || this.users.length < 1)
             this.generateUserList();
         return this.users;
+    },
+    getInfoStatusElement: function () {
+        if(!Utils.IsExists(this.infoStatusElement))
+            this.infoStatusElement = document.getElementById("infoStatus");
+        return this.infoStatusElement;
+    },
+    getPostURLElement: function () {
+        if(!Utils.IsExists(this.votingLinkInputElement))
+            this.votingLinkInputElement = document.getElementById("votingLink");
+        return this.votingLinkInputElement;
+    },
+    getPrepareUsersInfoBtn: function () {
+        if(!Utils.IsExists(this.prepareUsersInfoButton))
+            this.prepareUsersInfoButton = document.getElementById("prepareUsersInfo");
+        return this.prepareUsersInfoButton;
+    },
+    getSendWarningButton: function () {
+        if(!Utils.IsExists(this.sendWarningButton))
+            this.sendWarningButton = document.getElementById("sendWarning");
+        return this.sendWarningButton;
+    },
+    getPollId: function () {
+        var postURL = this.getPostURLElement();
+        if(!Utils.IsExists(postURL) || postURL.value == "")
+            return "-83223612_893";
+        return postURL.value.split("w=poll")[1];
+    },
+    getPoll: function () {
+        return new Poll(this.getPollId());
+    },
+
+    //event handlers
+    OnPrepareUsersInfoButtonClick: function () {
+        var poll = this.getPoll();
+        this.toggleLoadingPanel();
+        poll.receivePollData(function () {
+            this.getInfoStatusElement().innerText = poll.votedUsers.length;
+            this.toggleLoadingPanel();
+        }.bind(this));
+    },
+    OnSendWarningButtonClick: function () {
+
     }
 };
 
