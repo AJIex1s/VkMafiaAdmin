@@ -1,4 +1,4 @@
-var url = require('url');
+﻿var url = require('url');
 
 var token = url.parse(window.location.href, true).query["access_token"];
 document.addEventListener('DOMContentLoaded', function() {
