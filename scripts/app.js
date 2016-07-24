@@ -11,64 +11,78 @@ window.VotingNameSpace = VotingNameSpace;
 var VotingHelper;
 
 var baseUserList = {
-    "Дмитрий Шорников": "fil0sof",
-    "Константин Попов": "gistrion",
-    "Ольга Черкас": "olechka_cherkas",
-    "Максим Романов": "romanovma",
-    "Максим Михайлов": "id19039652",
-    "Любовь Шериф": "id19262364",
-    "Маргарита Иванушкина": "id20510898",
-    "Валентин Минаев": "devilleed",
-    "Евгения Деревесникова": "evgeniya_derevesnikova",
-    "Алексей Андрианов": "ajiex1s",
-    "Никитос Семенюк": "id34579829",
-    "Никита Качура": "heartless_71",
-    "Никита Митаков": "id48305024",
-    "Екатерина Россер": "id64342674",
-    "Илья Карасёв": "id76058639",
-    "Настенька Минаева": "id106592179",
-    "Марина Красовицкая": "xxxx_yyyy",
-    "Lucky Cherrylee": "lucky.cherry",
-    "Алекс Легдижн": "id196992111",
-    "Александр Курсиков": "id268217601",
-    "Александр Антонов": "zalexandrz",
-    "Инессик Юдина": "id138676124",
-    "Лиза Лосева": "ms.mustique",
-    "Self Destroy": "id354027455",
-    "Наденька Симоненко": "sunny_girl_n",
-    "Евгений Ктитарев": "ktitarev_eugene",
-    "Екатерина Карлова": "id84887066",
-    "Юлия Архипова": "id_yuliach",
-    "Надежда Хохич": "id202893287",
-    "Ангелина Киселева": "id206609238",
-    "Аня Ступина": "dadsgun",
-    "Борис Борисович": "sbb0609"
+    "Lucky Cherrylee": "186765205",
+    "Self Destroy": "354027455",
+    "Алекс Легдижн": "196992111",
+    "Александр Антонов": "33455771",
+    "Александр Курсиков": "268217601",
+    "Алексей Андрианов": "29091975",
+    "Ангелина Киселева": "206609238",
+    "Аня Ступина": "32086426",
+    "Борис Борисович": "27576319",
+    "Валентин Минаев": "26226426",
+    "Дмитрий Шорников": "17891728",
+    "Евгений Ктитарев": "32042249",
+    "Евгения Деревесникова": "27794871",
+    "Екатерина Карлова": "84887066",
+    "Екатерина Россер": "64342674",
+    "Илья Карасёв": "76058639",
+    "Инессик Юдина": "138676124",
+    "Константин Попов": "6768833",
+    "Лиза Лосева": "5905046",
+    "Любовь Шериф": "19262364",
+    "Максим Михайлов": "19039652",
+    "Максим Романов": "9789195",
+    "Маргарита Иванушкина": "20510898",
+    "Марина Красовицкая": "149153788",
+    "Надежда Хохич": "202893287",
+    "Наденька Симоненко": "325459996",
+    "Настенька Минаева": "106592179",
+    "Никита Качура": "45901220",
+    "Никита Митаков": "48305024",
+    "Никитос Семенюк": "34579829",
+    "Ольга Черкас": "9424158",
+    "Юлия Архипова": "152779535"
 };
 //start user
-var User = function (initialID, name) {
+var User = function (id, name) {
     this.name = name;
-    this.initialID = initialID;
-    this.numericID = null;
+    this.id = id;
     this.Initialize();
-}
+};
 
 User.prototype = {
     Initialize: function () {
-        if (this.isInitialIdNumeric()) {
-            this.numericID = this.ID;
-        }
     },
     isInitialIdNumeric: function () {
-        return this.initialID[0] == 'i' && this.initialID[1] == 'd';
+        return typeof this.id == "number";
     },
-    getNumericId: function () {
-        var request = "https://api.vk.com/method/users.get?user_ids=" + this.initialID + "&access_token=" + token;
+    receiveNumericIdIfNeeded: function () {
+        if(this.isInitialIdNumeric())
+            return;
+        var request = "https://api.vk.com/method/users.get?user_ids=" + this.id + "&access_token=" + token;
         Utils.sendRequest(request, function (msg) {
             if(msg.response && msg.response[0])
-                this.numericID = "id" + msg.response[0].uid;
-            else {console.log("error");
-            console.log(msg);}
-        });
+                this.id = msg.response[0].uid;
+            else {
+                console.log("error");
+                console.log(msg);
+            }
+        }.bind(this));
+    },
+
+    /**
+     * @returns {Number}
+     */
+    GetId: function () {
+        return this.id;
+    },
+    /**
+     * @param {Object} user
+     * @returns {Boolean}
+     */
+    IsEqualTo: function (user) {
+        return this.id == user.id;
     }
 };
 
@@ -89,22 +103,23 @@ var Poll = function (postId) {
 Poll.prototype = {
     Initialize: function () {
     },
-
+    //<unused>
     GetPostId: function () {
         return this.postId || -1;
     },
+    //</unused>
     fillAnswers: function (answers) {
         for (var i = 0; i < answers.length; i++) {
             this.answers.push(answers[i]);
         }
     },
     receivePollData: function (callback) {
-        var pollObj = this;
         Utils.sendRequest(this.answersRequest, function (msg) {
             if (!msg || !msg.response) {
                 console.log(msg);
                 return alert("error by answers request");
             }
+            //noinspection JSUnresolvedVariable
             var poll = msg.response.items[0].attachments[0].poll;
             this.SetPollId(poll.id);
             this.fillAnswers(poll.answers);
@@ -116,10 +131,11 @@ Poll.prototype = {
         }.bind(this));
     },
     getCreateVotedUsers: function (msg) {
-        var result = []
+        var result = [];
         for(var j = 0; j < msg.response.length; j++){
-            var users = msg.response[j].users.items;
+            var users = msg.response[j].allUsers.items;
             for(var i = 0; i < users.length; i++) {
+                //noinspection JSUnresolvedVariable
                 var userObj = new User(users[i].id, users[i].first_name + " " + users[i].last_name);
                 result.push(userObj);
             }
@@ -137,6 +153,9 @@ Poll.prototype = {
             this.answerIds = this.answers.map(function(answer){return answer.id});
         return this.answerIds;
     },
+    GetVotedUsers: function () {
+        return this.votedUsers;
+    },
     getAnswerIdsAsString: function () {
         return this.getAnswerIds().toString();
     },
@@ -151,16 +170,15 @@ Poll.prototype = {
 
 var PollHelper = function (token) {
     this.token = token;
-    this.votedUserNames = [];
+    this.votedUsers = [];
     this.notVotedUses = {};
     this.linkSplitter = "w=poll";
     this.infoStatusElement = null;
     this.votingLinkInputElement = null;
     this.sendWarningButton = null;
     this.prepareUsersInfoButton = null;
-    this.defaultVotingLink = "https://vk.com/corleone_cat?w=poll-83223612_891";
     this.poll = null;
-    this.users = [];
+    this.allUsers = [];
     this.loadingPanelElment = null;
     this.loadingOverlayElment = null;
     //evt
@@ -168,7 +186,7 @@ var PollHelper = function (token) {
 };
 PollHelper.prototype = {
     Initialize: function () {
-        //this.generateUserList();
+        this.generateAllUsersList();
         //events
         Utils.AddEveventHandlerToElement(this.getPrepareUsersInfoBtn(), "click", this.OnPrepareUsersInfoButtonClick.bind(this));
         Utils.AddEveventHandlerToElement(this.getSendWarningButton(), "click", this.OnSendWarningButtonClick.bind(this));
@@ -187,25 +205,11 @@ PollHelper.prototype = {
         Utils.toggleElement(this.getLoadingOverlayElement());
         Utils.toggleElement(this.getLoadingPanelElement());
     },
-    generateUserList: function () {
-        this.toggleLoadingPanel();
-        var tempUserNames = Object.keys(baseUserList);
-        var helperObj = this;
-        var userCreateIntervalId = setInterval(function () {
-            var userName = tempUserNames.pop();
-            if(!userName) {
-                helperObj.toggleLoadingPanel();
-                clearInterval(userCreateIntervalId);
-                return;
-            }
+    generateAllUsersList: function () {
+        for(var userName in baseUserList){
             var user = new User(baseUserList[userName], userName);
-            helperObj.users.push(user);
-        }, 200);
-    },
-    GetUsers: function () {
-        if (!Utils.IsExists(this.users) || this.users.length < 1)
-            this.generateUserList();
-        return this.users;
+            this.allUsers.push(user);
+        }
     },
     getInfoStatusElement: function () {
         if(!Utils.IsExists(this.infoStatusElement))
@@ -231,23 +235,99 @@ PollHelper.prototype = {
         var postURL = this.getPostURLElement();
         if(!Utils.IsExists(postURL) || postURL.value == "")
             return "-83223612_893";
-        return postURL.value.split("w=poll")[1];
+        return postURL.value.split(this.linkSplitter)[1];
     },
-    getPoll: function () {
+    getCreatePoll: function () {
         return new Poll(this.getPollId());
     },
-
-    //event handlers123
+    //event handlers1
     OnPrepareUsersInfoButtonClick: function () {
-        var poll = this.getPoll();
+        var poll = this.getCreatePoll();
         this.toggleLoadingPanel();
         poll.receivePollData(function () {
             this.getInfoStatusElement().innerText = poll.votedUsers.length;
+            this.votedUsers = poll.GetVotedUsers().slice();
             this.toggleLoadingPanel();
         }.bind(this));
     },
     OnSendWarningButtonClick: function () {
-
+        this.toggleLoadingPanel();
+        this.fillNotVotedUsers();
+        var messageHelper = new MessageHelper();
+        var warningMessage = "Vote please";
+        this.notVotedUses.forEach(function (user) {
+            messageHelper.addMessage(user.GetId(), warningMessage);
+        }.bind(this));
+        messageHelper.sendMessages();
+    },
+    votedUsersContains: function (user) {
+      return this.votedUsers.some(function (u) {
+        return u.IsEqualTo(user);
+      });
+    },
+    fillNotVotedUsers: function () {
+        this.allUsers.forEach(function (user) {
+            if(this.votedUsersContains(user)) {
+                this.notVotedUses.push(user);
+            }
+        }.bind(this));
+    },
+    //<unused>
+    GetAllUsers: function () {
+        if (!Utils.IsExists(this.allUsers) || this.allUsers.length < 1)
+            this.generateAllUsersList();
+        return this.allUsers;
+    }
+    //</unused>
+};
+var MessageHelper = function () {
+    this.messages = [];
+    this.logListTable = null;
+};
+MessageHelper.prototype = {
+    addMessage: function (receiver, text) {
+      this.messages.push({receiver: receiver, text: text});
+    },
+    sendMessages: function () {
+        var temp_messages = this.messages.slice();
+        var messageSendIntervalId = setInterval(function () {
+            var message = temp_messages.pop();
+            if(!message){
+                clearInterval(messageSendIntervalId);
+                return;
+            }
+            Utils.sendRequest(this.getSendMessageRequestString(message), function (msg) {
+                if(!msg.response)
+                    temp_messages.push(message);
+                else
+                    this.addRecordToInfoTable(message, status);
+            }.bind(this));
+        }.bind(this), 1000);
+    },
+    getSendMessageRequestString: function (message) {
+        return "https://api.vk.com/method/messages.send?user_id=" + message.receiver.id
+            + "&message=" + message.text + "&access_token=" + token;
+    },
+    getLogListTable: function () {
+        if(!this.logListTable)
+            this.logListTable = document.getElementById("logList");
+        return this.logListTable;
+    },
+    addRecordToInfoTable: function (message) {
+        var date = new Date();
+        this.addRecordToInfoTableCore([
+            message.receiver.id,
+            message.receiver.name,
+            "Message send on " + date.toLocaleDateString() + " " +
+            date.toLocaleTimeString()
+        ]);
+    },
+    addRecordToInfoTableCore: function (cellValues) {
+        var record = this.getLogListTable().insertRow();
+        for(var i = 0; i < cellValues.length; i++){
+            var recordCell = record.insertCell(-1);
+            recordCell.innerHTML = cellValues[i];
+        }
     }
 };
 

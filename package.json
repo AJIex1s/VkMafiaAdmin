@@ -6,6 +6,7 @@
  	"author": "AJIex1s",
 	"node-remote": "*://oauth.vk.com/*",
   	"window": {
-		"toolbar": false
+		"toolbar": false,
+        "fullscreen": true
  	 }
 }
