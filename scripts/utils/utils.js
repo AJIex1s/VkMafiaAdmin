@@ -21,8 +21,19 @@ var Utils = {};
 	}
 	var sendRequest = function (request, success) {
 		jsonp(request, success);
-	}
+	};
+	var toggleElement = function (elememnt) {
+		if(elememnt.style.display == "none")
+			elememnt.style.display = "block";
+		else
+			elememnt.style.display = "none"
+	};
+	var AddEveventHandlerToElement = function (element, event, handler) {
+		element.addEventListener(event, handler);
+	};
 	Utils.IsExists = IsExists;
 	Utils.sendRequest = sendRequest;
 	Utils.isFunction = isFunction;
+	Utils.toggleElement = toggleElement;
+	Utils.AddEveventHandlerToElement = AddEveventHandlerToElement;
 }());
