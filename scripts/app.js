@@ -1,6 +1,71 @@
 ﻿var url = require('url');
 //TODO REFACTOR
 var token = url.parse(window.location.href, true).query["access_token"];
+Page.prototype = {
+    //<loadingPanel>
+    LoadingOverlay: function () {
+        if(!this.loadingOverlayElment)
+            this.loadingOverlayElment = document.getElementById("loadingOverlay");
+        return this.loadingOverlayElment;
+    },
+    LoadingPanel: function () {
+        if(!this.loadingPanelElment)
+            this.loadingPanelElment = document.getElementById("loadingPanel");
+        return this.loadingPanelElment;
+    },
+    ToggleLoadingPanel: function () {
+        Utils.toggleElement(this.LoadingOverlay());
+        Utils.toggleElement(this.LoadingPanel());
+    },
+    //</loadingPanel>
+
+    //<pollInfo>
+    InfoStatus: function () {
+        if(!Utils.IsExists(this.infoStatusElement))
+            this.infoStatusElement = document.getElementById("infoStatus");
+        return this.infoStatusElement;
+    },
+    PostURL: function () {
+        if(!Utils.IsExists(this.votingLinkInputElement))
+            this.votingLinkInputElement = document.getElementById("votingLink");
+        return this.votingLinkInputElement;
+    },
+    PrepareUsersInfo: function () {
+        if(!Utils.IsExists(this.prepareUsersInfoButton))
+            this.prepareUsersInfoButton = document.getElementById("prepareUsersInfo");
+        return this.prepareUsersInfoButton;
+    },
+    //</pollInfo>
+
+    //<messages>
+    SendWarning: function () {
+        if(!Utils.IsExists(this.sendWarningButton))
+            this.sendWarningButton = document.getElementById("sendWarning");
+        return this.sendWarningButton;
+    },
+    LogList: function () {
+        if(!this.logListTable)
+            this.logListTable = document.getElementById("logList");
+        return this.logListTable;
+    },
+    AddRecordToInfoTable: function (message) {
+        var date = new Date();
+        this.addRecordToInfoTableCore([
+            message.receiver.id,
+            message.receiver.name,
+            "Message send on " + date.toLocaleDateString() + " " +
+            date.toLocaleTimeString()
+        ]);
+    },
+    AddRecordToInfoTableCore: function (cellValues) {
+        var record = this.LogList().insertRow();
+        for(var i = 0; i < cellValues.length; i++){
+            var recordCell = record.insertCell(-1);
+            recordCell.innerHTML = cellValues[i];
+        }
+    }
+    //</messages>
+};
 document.addEventListener('DOMContentLoaded', function() {
     var helper = new PollHelper(token);
     window.pollHelper = helper;
@@ -44,6 +109,16 @@ var baseUserList = {
     "Ольга Черкас": "9424158",
     "Юлия Архипова": "152779535"
 };
+var Page = function () {
+    this.loadingOverlayElment = null;
+    this.loadingPanelElment = null;
+    this.infoStatusElement = null;
+    this.votingLinkInputElement = null;
+    this.prepareUsersInfoButton = null;
+    this.sendWarningButton = null;
+    this.logListTable = null;
+};
+
 //start user
 var User = function (id, name) {
     this.name = name;
@@ -253,12 +328,12 @@ PollHelper.prototype = {
     OnSendWarningButtonClick: function () {
         this.toggleLoadingPanel();
         this.fillNotVotedUsers();
-        var messageHelper = new MessageHelper();
+        var pool = new MessagePool();
         var warningMessage = "Vote please";
         this.notVotedUses.forEach(function (user) {
-            messageHelper.addMessage(user, warningMessage);
+            pool.AddMessage(user, warningMessage);
         }.bind(this));
-        messageHelper.sendMessages(function () {
+        pool.SendMessages(function () {
             this.toggleLoadingPanel();
         }.bind(this));
     },
@@ -283,15 +358,15 @@ PollHelper.prototype = {
     }
     //</unused>
 };
-var MessageHelper = function () {
+var MessagePool = function () {
     this.messages = [];
     this.logListTable = null;
 };
-MessageHelper.prototype = {
-    addMessage: function (receiver, text) {
+MessagePool.prototype = {
+    AddMessage: function (receiver, text) {
       this.messages.push({receiver: receiver, text: text});
     },
-    sendMessages: function (callback) {
+    SendMessages: function (callback) {
         var temp_messages = this.messages.slice();
         var messageSendIntervalId = setInterval(function () {
             var message = temp_messages.pop();
@@ -301,8 +376,7 @@ MessageHelper.prototype = {
                     callback();
                 return;
             }
-            console.log(this.getSendMessageRequestString(message));
-            Utils.sendRequest(this.getSendMessageRequestString(message), function (msg) {
+            Utils.sendRequest(this.getMessageSendRequestString(message), function (msg) {
                 if(!msg.response)
                     temp_messages.push(message);
                 else
@@ -310,7 +384,7 @@ MessageHelper.prototype = {
             }.bind(this));
         }.bind(this), 2000);
     },
-    getSendMessageRequestString: function (message) {
+    getMessageSendRequestString: function (message) {
         return "https://api.vk.com/method/messages.send?user_id=" + "29091975"
             + "&message="+ message.receiver.name + ", " + message.text + "&access_token=" + token;
     },
