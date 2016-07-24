@@ -1,5 +1,5 @@
 ﻿var url = require('url');
-
+//TODO REFACTOR
 var token = url.parse(window.location.href, true).query["access_token"];
 document.addEventListener('DOMContentLoaded', function() {
     var helper = new PollHelper(token);
@@ -133,7 +133,7 @@ Poll.prototype = {
     getCreateVotedUsers: function (msg) {
         var result = [];
         for(var j = 0; j < msg.response.length; j++){
-            var users = msg.response[j].allUsers.items;
+            var users = msg.response[j].users.items;
             for(var i = 0; i < users.length; i++) {
                 //noinspection JSUnresolvedVariable
                 var userObj = new User(users[i].id, users[i].first_name + " " + users[i].last_name);
@@ -171,7 +171,7 @@ Poll.prototype = {
 var PollHelper = function (token) {
     this.token = token;
     this.votedUsers = [];
-    this.notVotedUses = {};
+    this.notVotedUses = [];
     this.linkSplitter = "w=poll";
     this.infoStatusElement = null;
     this.votingLinkInputElement = null;
@@ -256,9 +256,11 @@ PollHelper.prototype = {
         var messageHelper = new MessageHelper();
         var warningMessage = "Vote please";
         this.notVotedUses.forEach(function (user) {
-            messageHelper.addMessage(user.GetId(), warningMessage);
+            messageHelper.addMessage(user, warningMessage);
         }.bind(this));
-        messageHelper.sendMessages();
+        messageHelper.sendMessages(function () {
+            this.toggleLoadingPanel();
+        }.bind(this));
     },
     votedUsersContains: function (user) {
       return this.votedUsers.some(function (u) {
@@ -266,8 +268,9 @@ PollHelper.prototype = {
       });
     },
     fillNotVotedUsers: function () {
+        this.notVotedUses = [];
         this.allUsers.forEach(function (user) {
-            if(this.votedUsersContains(user)) {
+            if(!this.votedUsersContains(user)) {
                 this.notVotedUses.push(user);
             }
         }.bind(this));
@@ -288,25 +291,28 @@ MessageHelper.prototype = {
     addMessage: function (receiver, text) {
       this.messages.push({receiver: receiver, text: text});
     },
-    sendMessages: function () {
+    sendMessages: function (callback) {
         var temp_messages = this.messages.slice();
         var messageSendIntervalId = setInterval(function () {
             var message = temp_messages.pop();
             if(!message){
                 clearInterval(messageSendIntervalId);
+                if (Utils.IsExists(callback) && Utils.isFunction(callback))
+                    callback();
                 return;
             }
+            console.log(this.getSendMessageRequestString(message));
             Utils.sendRequest(this.getSendMessageRequestString(message), function (msg) {
                 if(!msg.response)
                     temp_messages.push(message);
                 else
                     this.addRecordToInfoTable(message, status);
             }.bind(this));
-        }.bind(this), 1000);
+        }.bind(this), 2000);
     },
     getSendMessageRequestString: function (message) {
-        return "https://api.vk.com/method/messages.send?user_id=" + message.receiver.id
-            + "&message=" + message.text + "&access_token=" + token;
+        return "https://api.vk.com/method/messages.send?user_id=" + "29091975"
+            + "&message="+ message.receiver.name + ", " + message.text + "&access_token=" + token;
     },
     getLogListTable: function () {
         if(!this.logListTable)

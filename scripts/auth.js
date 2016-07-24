@@ -15,7 +15,7 @@ window.onload = function () {
             "&display=page&redirect_uri=" + redirect_uri +
             "&scope=" + scope + "&response_type=" + response_type + "&v=" + version;
         var win = nw.Window.get();
-
+        nw.Window.get().maximize();
         nw.Window.open(tokenURL, {}, function(new_win) {
             new_win.on('loaded', function() {
                 authWin = new_win;

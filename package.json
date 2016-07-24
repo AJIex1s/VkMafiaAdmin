@@ -7,6 +7,8 @@
 	"node-remote": "*://oauth.vk.com/*",
   	"window": {
 		"toolbar": false,
-        "fullscreen": true
+        "visible-on-all-workspaces": true,
+        "resizable": true,
+        "frame": true
  	 }
 }
