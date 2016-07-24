@@ -237,7 +237,7 @@ PollHelper.prototype = {
         return new Poll(this.getPollId());
     },
 
-    //event handlers
+    //event handlers123
     OnPrepareUsersInfoButtonClick: function () {
         var poll = this.getPoll();
         this.toggleLoadingPanel();
