@@ -22,7 +22,8 @@ auth.onclick = function () {
             var params = url.parse(access_token_url, true).query;
             new_win.close();
             setTimeout(function () {
-                window.location.href = "main.html?access_token=" + params["access_token"];
+                sessionStorage.setItem("token", params["access_token"]);
+                window.location.href = "notification.html?access_token=" + params["access_token"];
             }, 100);
         });
 

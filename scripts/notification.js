@@ -1,12 +1,7 @@
 ﻿var url = require('url');
 //TODO REFACTOR
-var token = url.parse(window.location.href, true).query["access_token"];
+var token = sessionStorage["token"];
 
-document.addEventListener('DOMContentLoaded', function() {
-/*    var pageHelper = new AlertPageController();
-    var helper = new PollHelper(token);
-    window.pollHelper = helper;*/
-}, false);
 // (function() {
 var VotingNameSpace = {};
 window.VotingNameSpace = VotingNameSpace;
@@ -171,7 +166,7 @@ Poll.prototype = {
 };
 
 
-var AlertPageController = function () {
+var NotificationController = function () {
     this.token = "";
     //<gui elements>
     this.loadingOverlayElment = null;
@@ -190,7 +185,7 @@ var AlertPageController = function () {
     this.Initialize();
 };
 
-AlertPageController.prototype = {
+NotificationController.prototype = {
     Initialize: function () {
         this.generateAllUsersList();
         //events
