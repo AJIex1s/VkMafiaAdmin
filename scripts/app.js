@@ -1,74 +1,11 @@
 ﻿var url = require('url');
 //TODO REFACTOR
 var token = url.parse(window.location.href, true).query["access_token"];
-Page.prototype = {
-    //<loadingPanel>
-    LoadingOverlay: function () {
-        if(!this.loadingOverlayElment)
-            this.loadingOverlayElment = document.getElementById("loadingOverlay");
-        return this.loadingOverlayElment;
-    },
-    LoadingPanel: function () {
-        if(!this.loadingPanelElment)
-            this.loadingPanelElment = document.getElementById("loadingPanel");
-        return this.loadingPanelElment;
-    },
-    ToggleLoadingPanel: function () {
-        Utils.toggleElement(this.LoadingOverlay());
-        Utils.toggleElement(this.LoadingPanel());
-    },
-    //</loadingPanel>
 
-    //<pollInfo>
-    InfoStatus: function () {
-        if(!Utils.IsExists(this.infoStatusElement))
-            this.infoStatusElement = document.getElementById("infoStatus");
-        return this.infoStatusElement;
-    },
-    PostURL: function () {
-        if(!Utils.IsExists(this.votingLinkInputElement))
-            this.votingLinkInputElement = document.getElementById("votingLink");
-        return this.votingLinkInputElement;
-    },
-    PrepareUsersInfo: function () {
-        if(!Utils.IsExists(this.prepareUsersInfoButton))
-            this.prepareUsersInfoButton = document.getElementById("prepareUsersInfo");
-        return this.prepareUsersInfoButton;
-    },
-    //</pollInfo>
-
-    //<messages>
-    SendWarning: function () {
-        if(!Utils.IsExists(this.sendWarningButton))
-            this.sendWarningButton = document.getElementById("sendWarning");
-        return this.sendWarningButton;
-    },
-    LogList: function () {
-        if(!this.logListTable)
-            this.logListTable = document.getElementById("logList");
-        return this.logListTable;
-    },
-    AddRecordToInfoTable: function (message) {
-        var date = new Date();
-        this.addRecordToInfoTableCore([
-            message.receiver.id,
-            message.receiver.name,
-            "Message send on " + date.toLocaleDateString() + " " +
-            date.toLocaleTimeString()
-        ]);
-    },
-    AddRecordToInfoTableCore: function (cellValues) {
-        var record = this.LogList().insertRow();
-        for(var i = 0; i < cellValues.length; i++){
-            var recordCell = record.insertCell(-1);
-            recordCell.innerHTML = cellValues[i];
-        }
-    }
-    //</messages>
-};
 document.addEventListener('DOMContentLoaded', function() {
+/*    var pageHelper = new AlertPageController();
     var helper = new PollHelper(token);
-    window.pollHelper = helper;
+    window.pollHelper = helper;*/
 }, false);
 // (function() {
 var VotingNameSpace = {};
@@ -108,15 +45,6 @@ var baseUserList = {
     "Никитос Семенюк": "34579829",
     "Ольга Черкас": "9424158",
     "Юлия Архипова": "152779535"
-};
-var Page = function () {
-    this.loadingOverlayElment = null;
-    this.loadingPanelElment = null;
-    this.infoStatusElement = null;
-    this.votingLinkInputElement = null;
-    this.prepareUsersInfoButton = null;
-    this.sendWarningButton = null;
-    this.logListTable = null;
 };
 
 //start user
@@ -243,42 +171,31 @@ Poll.prototype = {
 };
 
 
-var PollHelper = function (token) {
-    this.token = token;
+var AlertPageController = function () {
+    this.token = "";
+    //<gui elements>
+    this.loadingOverlayElment = null;
+    this.loadingPanelElment = null;
+    this.infoStatusElement = null;
+    this.votingLinkInputElement = null;
+    this.prepareUsersInfoButton = null;
+    this.sendWarningButton = null;
+    this.logListTable = null;
+    //</gui elements>
     this.votedUsers = [];
     this.notVotedUses = [];
     this.linkSplitter = "w=poll";
-    this.infoStatusElement = null;
-    this.votingLinkInputElement = null;
-    this.sendWarningButton = null;
-    this.prepareUsersInfoButton = null;
     this.poll = null;
     this.allUsers = [];
-    this.loadingPanelElment = null;
-    this.loadingOverlayElment = null;
-    //evt
     this.Initialize();
 };
-PollHelper.prototype = {
+
+AlertPageController.prototype = {
     Initialize: function () {
         this.generateAllUsersList();
         //events
-        Utils.AddEveventHandlerToElement(this.getPrepareUsersInfoBtn(), "click", this.OnPrepareUsersInfoButtonClick.bind(this));
-        Utils.AddEveventHandlerToElement(this.getSendWarningButton(), "click", this.OnSendWarningButtonClick.bind(this));
-    },
-    getLoadingOverlayElement: function () {
-        if(!this.loadingOverlayElment)
-            this.loadingOverlayElment = document.getElementById("loadingOverlay");
-        return this.loadingOverlayElment;
-    },
-    getLoadingPanelElement: function () {
-        if(!this.loadingPanelElment)
-            this.loadingPanelElment = document.getElementById("loadingPanel");
-        return this.loadingPanelElment;
-    },
-    toggleLoadingPanel: function () {
-        Utils.toggleElement(this.getLoadingOverlayElement());
-        Utils.toggleElement(this.getLoadingPanelElement());
+        Utils.AddEveventHandlerToElement(this.PrepareUsersInfoButton(), "click", this.OnPrepareUsersInfoButtonClick.bind(this));
+        Utils.AddEveventHandlerToElement(this.SendWarningButton(), "click", this.OnSendWarningButtonClick.bind(this));
     },
     generateAllUsersList: function () {
         for(var userName in baseUserList){
@@ -286,31 +203,11 @@ PollHelper.prototype = {
             this.allUsers.push(user);
         }
     },
-    getInfoStatusElement: function () {
-        if(!Utils.IsExists(this.infoStatusElement))
-            this.infoStatusElement = document.getElementById("infoStatus");
-        return this.infoStatusElement;
-    },
-    getPostURLElement: function () {
-        if(!Utils.IsExists(this.votingLinkInputElement))
-            this.votingLinkInputElement = document.getElementById("votingLink");
-        return this.votingLinkInputElement;
-    },
-    getPrepareUsersInfoBtn: function () {
-        if(!Utils.IsExists(this.prepareUsersInfoButton))
-            this.prepareUsersInfoButton = document.getElementById("prepareUsersInfo");
-        return this.prepareUsersInfoButton;
-    },
-    getSendWarningButton: function () {
-        if(!Utils.IsExists(this.sendWarningButton))
-            this.sendWarningButton = document.getElementById("sendWarning");
-        return this.sendWarningButton;
-    },
     getPollId: function () {
-        var postURL = this.getPostURLElement();
-        if(!Utils.IsExists(postURL) || postURL.value == "")
+        var postURL = this.PollURL();
+        if(!Utils.IsExists(postURL) || this.GetPollURLValue() == "")
             return "-83223612_893";
-        return postURL.value.split(this.linkSplitter)[1];
+        return this.GetPollURLValue().split(this.linkSplitter)[1];
     },
     getCreatePoll: function () {
         return new Poll(this.getPollId());
@@ -318,15 +215,15 @@ PollHelper.prototype = {
     //event handlers1
     OnPrepareUsersInfoButtonClick: function () {
         var poll = this.getCreatePoll();
-        this.toggleLoadingPanel();
+        this.ToggleLoadingPanel();
         poll.receivePollData(function () {
-            this.getInfoStatusElement().innerText = poll.votedUsers.length;
+            this.SetInfoStatusText(poll.votedUsers.length);
             this.votedUsers = poll.GetVotedUsers().slice();
-            this.toggleLoadingPanel();
+            this.ToggleLoadingPanel();
         }.bind(this));
     },
     OnSendWarningButtonClick: function () {
-        this.toggleLoadingPanel();
+        this.ToggleLoadingPanel();
         this.fillNotVotedUsers();
         var pool = new MessagePool();
         var warningMessage = "Vote please";
@@ -334,13 +231,13 @@ PollHelper.prototype = {
             pool.AddMessage(user, warningMessage);
         }.bind(this));
         pool.SendMessages(function () {
-            this.toggleLoadingPanel();
+            this.ToggleLoadingPanel();
         }.bind(this));
     },
     votedUsersContains: function (user) {
-      return this.votedUsers.some(function (u) {
-        return u.IsEqualTo(user);
-      });
+        return this.votedUsers.some(function (u) {
+            return u.IsEqualTo(user);
+        });
     },
     fillNotVotedUsers: function () {
         this.notVotedUses = [];
@@ -350,14 +247,80 @@ PollHelper.prototype = {
             }
         }.bind(this));
     },
-    //<unused>
-    GetAllUsers: function () {
-        if (!Utils.IsExists(this.allUsers) || this.allUsers.length < 1)
-            this.generateAllUsersList();
-        return this.allUsers;
+
+    //GUI
+    //<loadingPanel>
+    LoadingOverlay: function () {
+        if(!this.loadingOverlayElment)
+            this.loadingOverlayElment = document.getElementById("loadingOverlay");
+        return this.loadingOverlayElment;
+    },
+    LoadingPanel: function () {
+        if(!this.loadingPanelElment)
+            this.loadingPanelElment = document.getElementById("loadingPanel");
+        return this.loadingPanelElment;
+    },
+    ToggleLoadingPanel: function () {
+        Utils.toggleElement(this.LoadingOverlay());
+        Utils.toggleElement(this.LoadingPanel());
+    },
+    //</loadingPanel>
+
+    //<pollInfo>
+    InfoStatus: function () {
+        if(!Utils.IsExists(this.infoStatusElement))
+            this.infoStatusElement = document.getElementById("infoStatus");
+        return this.infoStatusElement;
+    },
+    SetInfoStatusText: function (text) {
+        this.InfoStatus().innerHTML = text;
+    },
+
+    PollURL: function () {
+        if(!Utils.IsExists(this.votingLinkInputElement))
+            this.votingLinkInputElement = document.getElementById("votingLink");
+        return this.votingLinkInputElement;
+    },
+    GetPollURLValue: function () {
+        return this.PollURL().value;
+    },
+    PrepareUsersInfoButton: function () {
+        if(!Utils.IsExists(this.prepareUsersInfoButton))
+            this.prepareUsersInfoButton = document.getElementById("prepareUsersInfo");
+        return this.prepareUsersInfoButton;
+    },
+    //</pollInfo>
+
+    //<messages>
+    SendWarningButton: function () {
+        if(!Utils.IsExists(this.sendWarningButton))
+            this.sendWarningButton = document.getElementById("sendWarning");
+        return this.sendWarningButton;
+    },
+    LogList: function () {
+        if(!this.logListTable)
+            this.logListTable = document.getElementById("logList");
+        return this.logListTable;
+    },
+    AddRecordToInfoTable: function (message) {
+        var date = new Date();
+        this.addRecordToInfoTableCore([
+            message.receiver.id,
+            message.receiver.name,
+            "Message send on " + date.toLocaleDateString() + " " +
+            date.toLocaleTimeString()
+        ]);
+    },
+    AddRecordToInfoTableCore: function (cellValues) {
+        var record = this.LogList().insertRow();
+        for(var i = 0; i < cellValues.length; i++){
+            var recordCell = record.insertCell(-1);
+            recordCell.innerHTML = cellValues[i];
+        }
     }
-    //</unused>
+    //</messages>
 };
+
 var MessagePool = function () {
     this.messages = [];
     this.logListTable = null;
@@ -410,5 +373,4 @@ MessagePool.prototype = {
         }
     }
 };
-
 // }());
