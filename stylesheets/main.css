@@ -103,7 +103,7 @@
     padding-left: 10px;
 }
 
-#inner {
+#loadingInner {
     position: relative;
     z-index: 9;
     width: 50px;
@@ -113,7 +113,7 @@
     transform: translateY(-50%);
 }
 
-#inner > img {
+#loadingInner > img {
     width: 75px;
     height: 75px;
 }
@@ -130,7 +130,7 @@
     z-index: 11;
     background: rgba(0,0,0, 0.2);
 }
-#loadingPanel{
+#loadingELement{
     position: absolute;
     top:0;
     left: 0;

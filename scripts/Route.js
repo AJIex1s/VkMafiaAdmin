@@ -24,7 +24,7 @@ var urlModule = require('url');
         ScriptManager.prototype = {
             includeScripts: function () {
                 var pageName = getPageName(location.href);
-                var pageProcessorCreator;
+                var pageProcessor;
                 var scriptsRequired = ["/scripts/utils/utils.js"];
                 switch (pageName) {
                     case "index": {
@@ -33,22 +33,23 @@ var urlModule = require('url');
                     }
                     case "notification": {
                         scriptsRequired.push("/scripts/notification.js");
+                        pageProcessor = new NotificationController();
                         break;
                     }
                 }
                 scriptsRequired.forEach(function (src) {
                     addScript(src);
                 });
-            },
-            getPageProcessor: function () {
-                
             }
         };
 
-        return Router;
+        return ScriptManager;
     })();
     var scriptManager = new ScriptManager();
     window.addEventListener("DOMContentLoaded", function () {
         scriptManager.includeScripts();
+        setTimeout(function () {
+            Utils.CreateLoadingPanel();
+        }, 10);
     });
 }());
