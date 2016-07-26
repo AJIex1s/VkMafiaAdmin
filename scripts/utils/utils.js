@@ -36,10 +36,19 @@ var Utils = {};
 	var AddEveventHandlerToElement = function (element, event, handler) {
 		element.addEventListener(event, handler);
 	};
+	var ContainsObject = function (arr, obj, cMethod) {
+		return arr.some(function (objToCompare) {
+			if(!cMethod)
+				return cMethod(obj, objToCompare);
+			else
+				return obj.IsEqualTo(objToCompare)
+		})
+	}
 	Utils.IsExists = IsExists;
 	Utils.sendRequest = sendRequest;
 	Utils.isFunction = isFunction;
 	Utils.toggleElement = toggleElement;
 	Utils.AddEveventHandlerToElement = AddEveventHandlerToElement;
 	Utils.addScript = addScript;
+	Utils.ContainsObject = ContainsObject;
 }());

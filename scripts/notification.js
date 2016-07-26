@@ -89,60 +89,78 @@ User.prototype = {
 
 var Poll = function (postId) {
     this.postId = postId;
-    this.ownerId = postId.split("_")[0];
-    this.answersRequest = "https://api.vk.com/method/wall.getById?posts=" + this.postId
+    this.getPollCommand = "https://api.vk.com/method/wall.getById?posts=" + this.postId
         + "&extended=1&copy_history_depth=2&v=5.52&access_token=" + token;
     this.answerIds = [];
     this.answers = [];
     this.pollId = -1;
+    this.votingMembers = [];
     this.votedUsers = [];
+    this.notVotedUses = [];
     this.Initialize();
 };
 Poll.prototype = {
     Initialize: function () {
+        this.fillVotingMembers();
     },
     //<unused>
     GetPostId: function () {
         return this.postId || -1;
     },
     //</unused>
-    fillAnswers: function (answers) {
-        for (var i = 0; i < answers.length; i++) {
-            this.answers.push(answers[i]);
+    fillVotingMembers: function () {
+        for(var userName in baseUserList){
+            var user = new User(baseUserList[userName], userName);
+            this.votingMembers.push(user);
         }
     },
-    receivePollData: function (callback) {
-        Utils.sendRequest(this.answersRequest, function (msg) {
+    loadData: function (onDataLoaded) {
+        Utils.sendRequest(this.getPollCommand, function (msg) {
             if (!msg || !msg.response) {
                 console.log(msg);
                 return alert("error by answers request");
             }
             //noinspection JSUnresolvedVariable
             var poll = msg.response.items[0].attachments[0].poll;
-            this.SetPollId(poll.id);
             this.fillAnswers(poll.answers);
-            Utils.sendRequest(this.getCreateVotingRequestUrl(), function (msg) {
-                this.votedUsers = this.getCreateVotedUsers(msg);
-                if (Utils.IsExists(callback) && Utils.isFunction(callback))
-                    callback();
+
+            Utils.sendRequest(this.getVotersCommand(poll.id), function (msg) {
+                this.fillVotedUsers(msg.response);
+                this.fillNotVotedUsers();
+                if (Utils.IsExists(onDataLoaded) && Utils.isFunction(onDataLoaded))
+                    onDataLoaded();
             }.bind(this));
+            
         }.bind(this));
     },
-    getCreateVotedUsers: function (msg) {
+    fillAnswers: function (answers) {
+        for (var i = 0; i < answers.length; i++) {
+            this.answers.push(answers[i]);
+        }
+    },
+    fillVotedUsers: function (response) {
         var result = [];
-        for(var j = 0; j < msg.response.length; j++){
-            var users = msg.response[j].users.items;
+        for(var j = 0; j < response.length; j++){
+            var users = response[j].users.items;
             for(var i = 0; i < users.length; i++) {
                 //noinspection JSUnresolvedVariable
                 var userObj = new User(users[i].id, users[i].first_name + " " + users[i].last_name);
-                result.push(userObj);
+                this.votedUsers.push(userObj);
             }
         }
         return result;
     },
-    getCreateVotingRequestUrl: function () {
-        return "https://api.vk.com/method/polls.getVoters?owner_id=" + this.ownerId +
-            "&poll_id=" + this.GetPollId() + "&answer_ids=" + this.getAnswerIdsAsString() +
+    fillNotVotedUsers: function () {
+        this.notVotedUses = [];
+        this.votingMembers.forEach(function (user) {
+            if(!Utils.ContainsObject(this.votedUsers, user)) {
+                this.notVotedUses.push(user);
+            }
+        }.bind(this));
+    },
+    getVotersCommand: function (pollId) {
+        return "https://api.vk.com/method/polls.getVoters?owner_id=" + postId.split("_")[0] +
+            "&poll_id=" + pollId() + "&answer_ids=" + this.getAnswerIdsAsString() +
             "&fields=nickname&name_case=nom&v=5.52&access_token=" + token;
     },
     //setters getters
@@ -154,10 +172,13 @@ Poll.prototype = {
     GetVotedUsers: function () {
         return this.votedUsers;
     },
+    GetNotVotedUsers: function () {
+        return this.notVotedUses;
+    },
     getAnswerIdsAsString: function () {
         return this.getAnswerIds().toString();
     },
-    SetPollId: function (pollId) {
+    setPollId: function (pollId) {
         this.pollId = pollId;
     },
     GetPollId: function () {
@@ -198,20 +219,20 @@ NotificationController.prototype = {
             this.allUsers.push(user);
         }
     },
-    getPollId: function () {
-        var postURL = this.PollURL();
-        if(!Utils.IsExists(postURL) || this.GetPollURLValue() == "")
+    getPostId: function () {
+        var postURL = this.GetPostURL();
+        if(!Utils.IsExists(postURL) || this.GetPostURLValue() == "")
             return "-83223612_893";
-        return this.GetPollURLValue().split(this.linkSplitter)[1];
+        return this.GetPostURLValue().split(this.linkSplitter)[1];
     },
     getCreatePoll: function () {
-        return new Poll(this.getPollId());
+        return new Poll(this.getPostId());
     },
     //event handlers1
     OnPrepareUsersInfoButtonClick: function () {
         var poll = this.getCreatePoll();
         this.ToggleLoadingPanel();
-        poll.receivePollData(function () {
+        poll.loadData(function () {
             this.SetInfoStatusText(poll.votedUsers.length);
             this.votedUsers = poll.GetVotedUsers().slice();
             this.ToggleLoadingPanel();
@@ -271,13 +292,13 @@ NotificationController.prototype = {
         this.InfoStatus().innerHTML = text;
     },
 
-    PollURL: function () {
+    GetPostURL: function () {
         if(!Utils.IsExists(this.votingLinkInputElement))
             this.votingLinkInputElement = document.getElementById("votingLink");
         return this.votingLinkInputElement;
     },
-    GetPollURLValue: function () {
-        return this.PollURL().value;
+    GetPostURLValue: function () {
+        return this.GetPostURL().value;
     },
     PrepareUsersInfoButton: function () {
         if(!Utils.IsExists(this.prepareUsersInfoButton))
