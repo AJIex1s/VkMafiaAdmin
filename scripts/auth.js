@@ -2,9 +2,16 @@ var url = require('url');
 var token = "";
 var authWin = null;
 (function () {
+    var requestParams = {
+        client_id: "5521634",
+        redirect_uri: "https://oauth.vk.com/blank.html",
+        scope: "friends,messages,offline,wall,groups",
+        response_type: "token",
+        version: "5.52"
+    };
     var AuthController = function () {
         this.authButton = null;
-        Utils.AddEveventHandlerToElement(this.GetAuthButton(), "click", this.OnAuthButtonClick());
+        Utils.AddEveventHandlerToElement(this.GetAuthButton(), "click", this.OnAuthButtonClick.bind(this));
     };
     AuthController.prototype = {
         GetAuthButton: function () {
@@ -38,4 +45,5 @@ var authWin = null;
             return cmd;
         }
     }
+    window.AuthController = AuthController;
 }());

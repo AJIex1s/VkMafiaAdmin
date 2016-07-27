@@ -54,9 +54,11 @@ var Utils = {};
 	var sendRequest = function (request, success) {
 		jsonp(request, success);
 	};
-	var addScript = function( src ) {
+	var addScript = function( src, onLoad ) {
 		var s = document.createElement( 'script' );
 		s.setAttribute( 'src', src );
+		if(onLoad)
+			AddEveventHandlerToElement(s, "load", onLoad);
 		document.head.appendChild( s );
 	};
 	var toggleElement = function (elememnt) {

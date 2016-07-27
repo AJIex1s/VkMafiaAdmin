@@ -3,7 +3,7 @@ var urlModule = require('url');
     var Page = function (name) {
         this.name = name;
         this.controller = null;
-        this.requiredScripts = ["scripts/" + name + ".js"];
+        this.requiredScripts = ["/scripts/" + name + ".js"];
     };
     Page.prototype = {
         GetControllerName: function () {
@@ -12,7 +12,7 @@ var urlModule = require('url');
         },
         CreateController: function () {
             if (!this.controller)
-                this.controller = new window[this.GetControllerName()];
+                this.controller = new window[this.GetControllerName()]();
             return this.controller;
         },
         AddRequiredScript: function (src) {
@@ -50,6 +50,11 @@ var urlModule = require('url');
             InitPage: function () {
                 this.page = new Page(getPageName());
                 this.page.IncludeScripts();
+
+                var script = document.querySelector("script[src*='"+this.page.name+"']");
+                script.onload = function () {
+                    this.CreatePageController();
+                }.bind(this)
             },
             CreatePageController: function () {
                 return this.page.CreateController();
@@ -60,8 +65,4 @@ var urlModule = require('url');
     })();
     var router = new Router();
     router.InitPage();
-    window.addEventListener("DOMContentLoaded", function () {
-        var pageController = router.CreatePageController();
-        window.pageController = pageController;
-    });
 }());
