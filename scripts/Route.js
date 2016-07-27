@@ -1,55 +1,67 @@
 var urlModule = require('url');
 (function () {
-    var ScriptManager = (function () {
+    var Page = function (name) {
+        this.name = name;
+        this.controller = null;
+        this.requiredScripts = ["scripts/" + name + ".js"];
+    };
+    Page.prototype = {
+        GetControllerName: function () {
+            var capitalizedPageName = this.name.charAt(0).toUpperCase() + this.name.slice(1);
+            return capitalizedPageName + "Controller";
+        },
+        CreateController: function () {
+            if (!this.controller)
+                this.controller = new window[this.GetControllerName()];
+            return this.controller;
+        },
+        AddRequiredScript: function (src) {
+            return this.requiredScripts.push(src);
+        },
+        GetRequiredScripts: function () {
+            return this.requiredScripts;
+        },
+        IncludeScripts: function () {
+            this.GetRequiredScripts().forEach(function (src) {
+                Utils.addScript(src);
+            });
+        }
+    };
+    var Router = (function () {
         var instance;
-        var getPageName = function (url) {
+        var writeTokenToCookies = function (token) {
+            sessionStorage.setItem("token", token);
+        };
+
+        var getPageName = function () {
+            var url = location.href;
             var path = urlModule.parse(url, true).pathname;
             return path.replace("/", "").replace(".html", "");
         };
-        var addScript = function (src) {
-            var s = document.createElement('script');
-            s.setAttribute('src', src);
-            document.body.appendChild(s);
-        };
-        var writeTokenToCookies = function (token) {
-            sessionStorage.setItem("token", token);
-        }
 
-        function ScriptManager() {
+        function Router() {
             if (!instance)
                 instance = this;
             else return instance;
+            this.page = null;
         }
 
-        ScriptManager.prototype = {
-            includeScripts: function () {
-                var pageName = getPageName(location.href);
-                var pageProcessor;
-                var scriptsRequired = ["/scripts/utils/utils.js"];
-                switch (pageName) {
-                    case "index": {
-                        scriptsRequired.push("/scripts/auth.js");
-                        break;
-                    }
-                    case "notification": {
-                        scriptsRequired.push("/scripts/notification.js");
-                        pageProcessor = new NotificationController();
-                        break;
-                    }
-                }
-                scriptsRequired.forEach(function (src) {
-                    addScript(src);
-                });
+        Router.prototype = {
+            InitPage: function () {
+                this.page = new Page(getPageName());
+                this.page.IncludeScripts();
+            },
+            CreatePageController: function () {
+                return this.page.CreateController();
             }
         };
 
-        return ScriptManager;
+        return Router;
     })();
-    var scriptManager = new ScriptManager();
+    var router = new Router();
+    router.InitPage();
     window.addEventListener("DOMContentLoaded", function () {
-        scriptManager.includeScripts();
-        setTimeout(function () {
-            Utils.CreateLoadingPanel();
-        }, 10);
+        var pageController = router.CreatePageController();
+        window.pageController = pageController;
     });
 }());

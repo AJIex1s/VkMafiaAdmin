@@ -1,7 +1,6 @@
 ﻿var url = require('url');
 //TODO REFACTOR
 var token = sessionStorage["token"];
-
 (function () {
 
     var baseUserList = {
@@ -348,5 +347,6 @@ var token = sessionStorage["token"];
             }
         }
     };
+
     window.NotificationController = NotificationController;
 }());

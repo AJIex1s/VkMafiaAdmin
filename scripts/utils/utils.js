@@ -57,7 +57,7 @@ var Utils = {};
 	var addScript = function( src ) {
 		var s = document.createElement( 'script' );
 		s.setAttribute( 'src', src );
-		document.body.appendChild( s );
+		document.head.appendChild( s );
 	};
 	var toggleElement = function (elememnt) {
 		if(elememnt.style.display == "none")
