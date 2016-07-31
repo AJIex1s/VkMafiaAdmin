@@ -1,4 +1,5 @@
 var urlModule = require('url');
+var Controllers = {};
 (function () {
     var Page = function (name) {
         this.name = name;
@@ -12,7 +13,7 @@ var urlModule = require('url');
         },
         CreateController: function () {
             if (!this.controller)
-                this.controller = new window[this.GetControllerName()]();
+                this.controller = new Controllers[this.GetControllerName()]();
             return this.controller;
         },
         AddRequiredScript: function (src) {

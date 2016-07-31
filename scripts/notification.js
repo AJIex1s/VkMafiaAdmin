@@ -348,5 +348,5 @@ var token = sessionStorage["token"];
         }
     };
 
-    window.NotificationController = NotificationController;
+    Controllers.NotificationController = NotificationController;
 }());
