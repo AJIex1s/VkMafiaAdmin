@@ -8,16 +8,16 @@ nw.Window.get().onNavigation = function () {
     var requestParams = {
         client_id: "5521634",
         redirect_uri: "https://oauth.vk.com/blank.html",
-        scope: "friends,messages,wall,groups,photos,audio,video,notes,docs,pages,email",
+        scope: "friends,messages,wall,groups,offline",
         response_type: "token",
         version: "5.52"
     };
-    var AuthController = function () {
+    var AuthPageController = function () {
         this.authButton = null;
         this.token = "";
         this.Initialize();
     };
-    AuthController.prototype = {
+    AuthPageController.prototype = {
         Initialize: function () {
             Utils.AddEveventHandlerToElement(this.GetAuthButton(), "click", this.OnAuthButtonClick.bind(this));
         },
@@ -39,9 +39,11 @@ nw.Window.get().onNavigation = function () {
         OnAuthWindowLoaded: function (auth) {
             var token = this.GetAccessToken(auth.window);
             sessionStorage.setItem("token", token);
-            debugger;
-            auth.close();
-            for(w in nw.global.__nw_windows) {if(nw.global.__nw_windows[w][0].window.location.href.indexOf("access_token=") != -1) nw.global.__nw_windows[w][0].close()}
+            for(w in nw.global.__nw_windows) {
+                debugger;
+                if(nw.global.__nw_windows[w][0].window.location.href.indexOf("access_token=") != -1)
+                    nw.global.__nw_windows[w][0].close();
+            }
             setTimeout(function () {
                 this.RedirectToNotificationPage(token);
             }.bind(this), 100);
@@ -87,5 +89,5 @@ nw.Window.get().onNavigation = function () {
 
 
 
-    Controllers.AuthController = AuthController;
+    Controllers.AuthController = AuthPageController;
 }());

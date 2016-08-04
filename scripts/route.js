@@ -9,7 +9,7 @@ var Controllers = {};
     Page.prototype = {
         GetControllerName: function () {
             var capitalizedPageName = this.name.charAt(0).toUpperCase() + this.name.slice(1);
-            return capitalizedPageName + "Controller";
+            return capitalizedPageName + "PageController";
         },
         CreateController: function () {
             if (!this.controller)

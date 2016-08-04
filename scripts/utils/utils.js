@@ -86,4 +86,5 @@ var Utils = {};
 	Utils.addScript = addScript;
 	Utils.ContainsObject = ContainsObject;
 	Utils.CreateLoadingPanel = CreateLoadingPanel;
+	Utils.ToggleLoadingPanel = ToggleLoadingPanel;
 }());

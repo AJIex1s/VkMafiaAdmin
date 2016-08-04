@@ -83,7 +83,7 @@ var token = sessionStorage["token"];
 //end user///
 
 
-    var Poll = function (postId) {
+    var PollDataSource = function (postId) {
         this.postId = postId;
         this.getPollCommand = "https://api.vk.com/method/wall.getById?posts=" + this.postId
             + "&extended=1&copy_history_depth=2&v=5.52&access_token=" + token;
@@ -95,22 +95,17 @@ var token = sessionStorage["token"];
         this.notVotedUses = [];
         this.Initialize();
     };
-    Poll.prototype = {
+    PollDataSource.prototype = {
         Initialize: function () {
             this.fillVotingMembers();
         },
-        //<unused>
-        GetPostId: function () {
-            return this.postId || -1;
-        },
-        //</unused>
         fillVotingMembers: function () {
             for (var userName in baseUserList) {
                 var user = new User(baseUserList[userName], userName);
                 this.votingMembers.push(user);
             }
         },
-        loadData: function (onDataLoaded) {
+        LoadData: function (onDataLoaded) {
             Utils.sendRequest(this.getPollCommand, function (msg) {
                 if (!msg || !msg.response) {
                     console.log(msg);
@@ -159,6 +154,9 @@ var token = sessionStorage["token"];
                 "&poll_id=" + pollId() + "&answer_ids=" + this.getAnswerIdsAsString() +
                 "&fields=nickname&name_case=nom&v=5.52&access_token=" + token;
         },
+        getAnswerIdsAsString: function () {
+            return this.getAnswerIds().toString();
+        },
         //setters getters
         getAnswerIds: function () {
             if (!this.answerIds || this.answerIds.length < 1)
@@ -173,23 +171,15 @@ var token = sessionStorage["token"];
         GetNotVotedUsers: function () {
             return this.notVotedUses;
         },
-        getAnswerIdsAsString: function () {
-            return this.getAnswerIds().toString();
-        },
-        setPollId: function (pollId) {
-            this.pollId = pollId;
-        },
         GetPollId: function () {
             return this.pollId;
         }
     };
 
 
-    var NotificationController = function () {
+    var NotificationPageController = function () {
         this.token = "";
         //<gui elements>
-        this.loadingOverlayElment = null;
-        this.loadingPanelElment = null;
         this.infoStatusElement = null;
         this.votingLinkInputElement = null;
         this.prepareUsersInfoButton = null;
@@ -204,7 +194,7 @@ var token = sessionStorage["token"];
         this.Initialize();
     };
 
-    NotificationController.prototype = {
+    NotificationPageController.prototype = {
         Initialize: function () {
             //events
             Utils.AddEveventHandlerToElement(this.PrepareUsersInfoButton(), "click", this.OnPrepareUsersInfoButtonClick.bind(this));
@@ -217,25 +207,44 @@ var token = sessionStorage["token"];
             return this.GetPostURLValue().split(this.linkSplitter)[1];
         },
         getCreatePoll: function () {
-            return new Poll(this.getPostId());
+            return new PollDataSource(this.getPostId());
         },
-
         //event handlers
         OnPrepareUsersInfoButtonClick: function () {
             this.poll = this.getCreatePoll();
-            this.poll.loadData(function () {
+            this.poll.LoadData(function () {
                 this.SetInfoStatusText(poll.GetVotedUsers().length);
             }.bind(this));
         },
         OnSendNotificationButtonClick: function () {
-            var messages = new MessagePool();
-
+            Utils.ToggleLoadingPanel();
+            var sender = new MessageSender();
             var warningMessage = "Vote please";
             this.poll.GetNotVotedUsers().forEach(function (user) {
-                messages.AddMessage(user, warningMessage);
+                sender.AddMessageToQuene(user, warningMessage);
             }.bind(this));
-            messages.SendMessages(function () {
+
+            sender.AddEventListener(sender.AllMessagesSendEventName, function () {
+                Utils.ToggleLoadingPanel();
             });
+            sender.AddEventListener(sender.OneMessageSendEventName, this.AddRecordToInfoTable.bind(this));
+            sender.SendMessages();
+        },
+        AddRecordToInfoTable: function (message) {
+            var date = new Date();
+            this.addRecordToInfoTableCore([
+                message.receiver.id,
+                message.receiver.name,
+                "Message send on " + date.toLocaleDateString() + " " +
+                date.toLocaleTimeString()
+            ]);
+        },
+        AddRecordToInfoTableCore: function (cellValues) {
+            var record = this.LogList().insertRow();
+            for (var i = 0; i < cellValues.length; i++) {
+                var recordCell = record.insertCell(-1);
+                recordCell.innerHTML = cellValues[i];
+            }
         },
         votedUsersContains: function (user) {
             return this.votedUsers.some(function (u) {
@@ -270,7 +279,6 @@ var token = sessionStorage["token"];
         },
         //</pollInfo>
 
-        //<messages>
         SendWarningButton: function () {
             if (!Utils.IsExists(this.sendWarningButton))
                 this.sendWarningButton = document.getElementById("sendWarning");
@@ -280,44 +288,35 @@ var token = sessionStorage["token"];
             if (!this.logListTable)
                 this.logListTable = document.getElementById("logList");
             return this.logListTable;
-        },
-        AddRecordToInfoTable: function (message) {
-            var date = new Date();
-            this.addRecordToInfoTableCore([
-                message.receiver.id,
-                message.receiver.name,
-                "Message send on " + date.toLocaleDateString() + " " +
-                date.toLocaleTimeString()
-            ]);
-        },
-        AddRecordToInfoTableCore: function (cellValues) {
-            var record = this.LogList().insertRow();
-            for (var i = 0; i < cellValues.length; i++) {
-                var recordCell = record.insertCell(-1);
-                recordCell.innerHTML = cellValues[i];
-            }
         }
-        //</messages>
     };
 
-    var MessagePool = function () {
+    var MessageSender = function () {
         this.messages = [];
         this.logListTable = null;
+        //events
+        this.OneMessageSendEventName = "OneMessageSend";
+        this.AllMessagesSendEventName = "AllMessagesSend";
+        
+        this.OneMessageSend = null;
+        this.AllMessagesSend = null;
     };
-    MessagePool.prototype = {
-        AddMessage: function (receiver, text) {
+    MessageSender.prototype = {
+        AddMessageToQuene: function (receiver, text) {
             this.messages.push({receiver: receiver, text: text});
         },
-        SendMessages: function (onMessageSend) {
+        SendMessagesFromQuene: function () {
             var messageSendIntervalId = setInterval(function () {
                 var message = this.messages.pop();
                 if (!message) {
                     clearInterval(messageSendIntervalId);
+                    this.RaiseAllMessagesSend();
                     return;
                 }
                 Utils.sendRequest(this.getMessageSendRequestString(message), function (msg) {
                     if (!msg.response)
                         temp_messages.push(message);
+                    else this.RaiseOneMessageSend(message);
                 }.bind(this));
             }.bind(this), 2000);
         },
@@ -325,28 +324,21 @@ var token = sessionStorage["token"];
             return "https://api.vk.com/method/messages.send?user_id=" + "29091975"
                 + "&message=" + message.receiver.name + ", " + message.text + "&access_token=" + token;
         },
-        getLogListTable: function () {
-            if (!this.logListTable)
-                this.logListTable = document.getElementById("logList");
-            return this.logListTable;
+        RaiseAllMessagesSend: function () {
+            if(this.AllMessagesSend)
+                this.AllMessagesSend();
         },
-        addRecordToInfoTable: function (message) {
-            var date = new Date();
-            this.addRecordToInfoTableCore([
-                message.receiver.id,
-                message.receiver.name,
-                "Message send on " + date.toLocaleDateString() + " " +
-                date.toLocaleTimeString()
-            ]);
+        RaiseOneMessageSend: function (message) {
+            if(this.OneMessageSend)
+                this.OneMessageSend(message);
         },
-        addRecordToInfoTableCore: function (cellValues) {
-            var record = this.getLogListTable().insertRow();
-            for (var i = 0; i < cellValues.length; i++) {
-                var recordCell = record.insertCell(-1);
-                recordCell.innerHTML = cellValues[i];
-            }
+        AddEventListener: function (evtName, handler) {
+           if(this.key.indexOf(evtName) != -1 && Utils.isFunction(handler))
+               this[evtName] = handler;
+            else throw this.constructor.name +
+           " add event listener exception " + evtName + handler.toString();
         }
     };
 
-    Controllers.NotificationController = NotificationController;
+    Controllers.NotificationController = NotificationPageController;
 }());
