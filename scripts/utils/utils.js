@@ -12,6 +12,7 @@ var Utils = {};
 	var CreateLoadingPanel = function () {
 		var mainElem = document.createElement("DIV");
 		mainElem.id = "loadingMain";
+		mainElem.style.display = "none";
 		var overlay = document.createElement("DIV");
 		overlay.id = "loadingOverlay";
 
@@ -28,6 +29,7 @@ var Utils = {};
 		mainElem.appendChild(overlay);
 		mainElem.appendChild(loading);
 
+		document.body.appendChild(mainElem);
 		return mainElem;
 	};
 	var ToggleLoadingPanel = function () {
@@ -72,7 +74,7 @@ var Utils = {};
 	};
 	var ContainsObject = function (arr, obj, cMethod) {
 		return arr.some(function (objToCompare) {
-			if(!cMethod)
+			if(cMethod)
 				return cMethod(obj, objToCompare);
 			else
 				return obj.IsEqualTo(objToCompare)

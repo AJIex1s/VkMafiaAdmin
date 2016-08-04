@@ -51,6 +51,7 @@ var token = sessionStorage["token"];
         isInitialIdNumeric: function () {
             return typeof this.id == "number";
         },
+/*
         receiveNumericIdIfNeeded: function () {
             if (this.isInitialIdNumeric())
                 return;
@@ -64,13 +65,8 @@ var token = sessionStorage["token"];
                 }
             }.bind(this));
         },
+*/
 
-        /**
-         * @returns {Number}
-         */
-        GetId: function () {
-            return this.id;
-        },
         /**
          * @param {Object} user
          * @returns {Boolean}
@@ -89,7 +85,6 @@ var token = sessionStorage["token"];
             + "&extended=1&copy_history_depth=2&v=5.52&access_token=" + token;
         this.answerIds = [];
         this.answers = [];
-        this.pollId = -1;
         this.votingMembers = [];
         this.votedUsers = [];
         this.notVotedUses = [];
@@ -132,6 +127,7 @@ var token = sessionStorage["token"];
         fillVotedUsers: function (response) {
             var result = [];
             for (var j = 0; j < response.length; j++) {
+                //noinspection JSUnresolvedVariable
                 var users = response[j].users.items;
                 for (var i = 0; i < users.length; i++) {
                     //noinspection JSUnresolvedVariable
@@ -150,8 +146,8 @@ var token = sessionStorage["token"];
             }.bind(this));
         },
         getVotersCommand: function (pollId) {
-            return "https://api.vk.com/method/polls.getVoters?owner_id=" + postId.split("_")[0] +
-                "&poll_id=" + pollId() + "&answer_ids=" + this.getAnswerIdsAsString() +
+            return "https://api.vk.com/method/polls.getVoters?owner_id=" + this.postId.split("_")[0] +
+                "&poll_id=" + pollId + "&answer_ids=" + this.getAnswerIdsAsString() +
                 "&fields=nickname&name_case=nom&v=5.52&access_token=" + token;
         },
         getAnswerIdsAsString: function () {
@@ -170,9 +166,6 @@ var token = sessionStorage["token"];
         },
         GetNotVotedUsers: function () {
             return this.notVotedUses;
-        },
-        GetPollId: function () {
-            return this.pollId;
         }
     };
 
@@ -190,7 +183,6 @@ var token = sessionStorage["token"];
         this.notVotedUses = [];
         this.linkSplitter = "w=poll";
         this.poll = null;
-        this.allUsers = [];
         this.Initialize();
     };
 
@@ -211,9 +203,11 @@ var token = sessionStorage["token"];
         },
         //event handlers
         OnPrepareUsersInfoButtonClick: function () {
+            Utils.ToggleLoadingPanel();
             this.poll = this.getCreatePoll();
             this.poll.LoadData(function () {
-                this.SetInfoStatusText(poll.GetVotedUsers().length);
+                this.SetInfoStatusText(this.poll.GetVotedUsers().length);
+                Utils.ToggleLoadingPanel();
             }.bind(this));
         },
         OnSendNotificationButtonClick: function () {
@@ -228,7 +222,7 @@ var token = sessionStorage["token"];
                 Utils.ToggleLoadingPanel();
             });
             sender.AddEventListener(sender.OneMessageSendEventName, this.AddRecordToInfoTable.bind(this));
-            sender.SendMessages();
+            sender.SendMessagesFromQuene();
         },
         AddRecordToInfoTable: function (message) {
             var date = new Date();
@@ -239,17 +233,12 @@ var token = sessionStorage["token"];
                 date.toLocaleTimeString()
             ]);
         },
-        AddRecordToInfoTableCore: function (cellValues) {
+        addRecordToInfoTableCore: function (cellValues) {
             var record = this.LogList().insertRow();
             for (var i = 0; i < cellValues.length; i++) {
                 var recordCell = record.insertCell(-1);
                 recordCell.innerHTML = cellValues[i];
             }
-        },
-        votedUsersContains: function (user) {
-            return this.votedUsers.some(function (u) {
-                return u.IsEqualTo(user);
-            });
         },
 
         //GUI
@@ -297,7 +286,7 @@ var token = sessionStorage["token"];
         //events
         this.OneMessageSendEventName = "OneMessageSend";
         this.AllMessagesSendEventName = "AllMessagesSend";
-        
+
         this.OneMessageSend = null;
         this.AllMessagesSend = null;
     };
@@ -315,30 +304,30 @@ var token = sessionStorage["token"];
                 }
                 Utils.sendRequest(this.getMessageSendRequestString(message), function (msg) {
                     if (!msg.response)
-                        temp_messages.push(message);
+                        this.messages.push(message);
                     else this.RaiseOneMessageSend(message);
                 }.bind(this));
             }.bind(this), 2000);
         },
         getMessageSendRequestString: function (message) {
-            return "https://api.vk.com/method/messages.send?user_id=" + "29091975"
+            return "https://api.vk.com/method/messages.send?user_id=" + message.receiver.id//"29091975"
                 + "&message=" + message.receiver.name + ", " + message.text + "&access_token=" + token;
         },
         RaiseAllMessagesSend: function () {
-            if(this.AllMessagesSend)
+            if (this.AllMessagesSend)
                 this.AllMessagesSend();
         },
         RaiseOneMessageSend: function (message) {
-            if(this.OneMessageSend)
+            if (this.OneMessageSend)
                 this.OneMessageSend(message);
         },
         AddEventListener: function (evtName, handler) {
-           if(this.key.indexOf(evtName) != -1 && Utils.isFunction(handler))
-               this[evtName] = handler;
+            if (Utils.isFunction(handler))
+                this[evtName] = handler;
             else throw this.constructor.name +
-           " add event listener exception " + evtName + handler.toString();
+            " add event listener exception " + evtName + handler.toString();
         }
     };
 
-    Controllers.NotificationController = NotificationPageController;
+    Controllers.NotificationPageController = NotificationPageController;
 }());

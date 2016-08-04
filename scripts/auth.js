@@ -39,11 +39,7 @@ nw.Window.get().onNavigation = function () {
         OnAuthWindowLoaded: function (auth) {
             var token = this.GetAccessToken(auth.window);
             sessionStorage.setItem("token", token);
-            for(w in nw.global.__nw_windows) {
-                debugger;
-                if(nw.global.__nw_windows[w][0].window.location.href.indexOf("access_token=") != -1)
-                    nw.global.__nw_windows[w][0].close();
-            }
+            auth.close();
             setTimeout(function () {
                 this.RedirectToNotificationPage(token);
             }.bind(this), 100);
@@ -89,5 +85,5 @@ nw.Window.get().onNavigation = function () {
 
 
 
-    Controllers.AuthController = AuthPageController;
+    Controllers.AuthPageController = AuthPageController;
 }());
