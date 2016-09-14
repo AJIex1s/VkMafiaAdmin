@@ -1,7 +1,7 @@
 ﻿<html>
 <head>
-    <script type="text/javascript" src="scripts/utils/utils.js" ></script>
-    <script src="scripts/route.js" type="text/javascript"></script>
+    <script type="text/javascript" src="scripts/utils.js"></script>
+    <script type="text/javascript" src="scripts/route.js"></script>
     <link href="stylesheets/main.css" rel="stylesheet" type="text/css"/>
     <style>
     </style>
@@ -38,15 +38,16 @@
                 <input type="button" value="get allUsers info" id="prepareUsersInfo" class="btn"/>
             </div>
         </div>
-        <span id="infoStatus"></span><span> allUsers are voted on this poll </span><span id="votingUrl"></span>
-        <br/><br/>
-        <hr/>
-        <div class="userBlock">
+
+        <div class="notVotedUsers" style="display: none;">
+            <span id="infoStatus"></span><span>chat members are voted on this poll </span><span id="votingUrl"></span>
+            <br/><br/>
+            <hr/>
             <div>
                 <input type="button" value="send warning" id="sendWarning" class="btn"/>
             </div>
             <div>
-                <table id="logList" style="border: 1px solid; border-collapse: collapse;">
+                <table id="notVotedUsers" style="border: 1px solid; border-collapse: collapse;">
                     <tr>
                         <td>ID</td>
                         <td>Имя нехорошего человека</td>

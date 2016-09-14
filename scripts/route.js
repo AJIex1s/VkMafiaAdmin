@@ -1,4 +1,5 @@
-var urlModule = require('url');
+"use strict";
+var urlModule = require("url");
 var Controllers = {};
 (function () {
     var Page = function (name) {
@@ -16,7 +17,7 @@ var Controllers = {};
                 this.controller = new Controllers[this.GetControllerName()]();
             return this.controller;
         },
-        AddRequiredScript: function (src) {
+        AddRequiredScript: function(src) {
             return this.requiredScripts.push(src);
         },
         GetRequiredScripts: function () {
@@ -24,7 +25,7 @@ var Controllers = {};
         },
         IncludeScripts: function () {
             this.GetRequiredScripts().forEach(function (src) {
-                Utils.addScript(src);
+                Utils.AddScript(src);
             });
         }
     };

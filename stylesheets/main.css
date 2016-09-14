@@ -63,21 +63,21 @@
     width: 20%;
 }
 
-.userBlock {
+.notVotedUsers {
     width: 100%;
 }
 
-.userBlock > div {
+.notVotedUsers > div {
     width: 100%;
 }
 
-.userBlock > div > input {
+.notVotedUsers > div > input {
     width: 100%;
     height: 40px;
     margin: 10px 0 20px;
 }
 
-.userBlock > div > table {
+.notVotedUsers > div > table {
     margin: 0 auto;
 }
 
@@ -94,7 +94,7 @@
     clear: both;
 }
 
-#logList tr td {
+#notVotedUsers tr td {
     border: 1px solid;
     padding: 20px 40px;
 }
@@ -130,7 +130,7 @@
     z-index: 11;
     background: rgba(0,0,0, 0.2);
 }
-#loadingELement{
+#loadingElement{
     position: absolute;
     top:0;
     left: 0;
