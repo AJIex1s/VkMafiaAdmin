@@ -1,13 +1,29 @@
 "use strict";
 var urlModule = require("url");
 var Controllers = {};
+var DataSources = {};
 (function () {
     var Page = function (name) {
         this.name = name;
         this.controller = null;
-        this.requiredScripts = ["/scripts/controllers" + name + ".js"];
+        this.requiredScripts = [];
+        this.Initialize();
     };
     Page.prototype = {
+        Initialize: function() {
+            var modelName = Utils.TryGetPageModelName(this.name);
+            if(modelName)
+                this.addModelScript(modelName);
+            this.addControllerScript();
+        },
+        addModelScript: function(modelName) {
+            var modelRequiredScriptSrc = "/scripts/models/" + modelName + ".js";
+            this.addRequiredScript(modelRequiredScriptSrc);
+        },
+        addControllerScript: function() {
+            var controllerRequiredScriptSrc = "/scripts/controllers/" + this.name + ".js";
+            this.addRequiredScript(controllerRequiredScriptSrc);
+        },
         GetControllerName: function () {
             var capitalizedPageName = this.name.charAt(0).toUpperCase() + this.name.slice(1);
             return capitalizedPageName + "PageController";
@@ -17,7 +33,7 @@ var Controllers = {};
                 this.controller = new Controllers[this.GetControllerName()]();
             return this.controller;
         },
-        AddRequiredScript: function(src) {
+        addRequiredScript: function(src) {
             return this.requiredScripts.push(src);
         },
         GetRequiredScripts: function () {

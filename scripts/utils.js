@@ -127,7 +127,7 @@ var Utils = {};
 
     var SendMessage = function(message, onEndResponse, onSuccess, delay) {
         var getMessageSendRequest = message => "https://api.vk.com/method/messages.send?user_id=" + /*message.receiver.id*/"29091975"
-        + "&message=" + message.receiver.name + ", " + message.text + "&access_token=" + token;
+        + "&message=" + message.receiver.name + ", " + message.text + "&access_token=" + sessionStorage.token;
         var request = getMessageSendRequest(message);
         setTimeout(function() {
             Utils.SendRequest(request, function(result) {
@@ -146,8 +146,27 @@ var Utils = {};
         }
         return queue;
     };
-
-
+    var GetCreateMessages = function(users, onMessageSend) {
+        var result = users.map(function(user) {
+            return {
+                receiver: user,
+                text: "",
+                OnProcessed: function() {
+                    onMessageSend(user);
+                }
+            };
+        });
+        return result;
+    };
+    var ControllerRequiredModels = {
+        "notification": "poll"
+    };
+    var TryGetControllerModelName = function(name) {
+        var modelName = null;
+        if(Object.keys(ControllerRequiredModels).indexOf(name) > -1)
+            modelName = ControllerRequiredModels[name];
+        return modelName;
+    };
     Utils.IsExists = IsExists;
     Utils.SendRequest = SendRequest;
     Utils.IsFunction = IsFunction;
@@ -159,4 +178,6 @@ var Utils = {};
     Utils.ToggleLoadingPanel = ToggleLoadingPanel;
     Utils.SendMessage = SendMessage;
     Utils.GetCreateMessageQueue = GetCreateMessageQueue;
+    Utils.GetCreateMessages = GetCreateMessages;
+    Utils.TryGetPageModelName = TryGetControllerModelName;
 }());
