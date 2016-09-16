@@ -5,7 +5,7 @@ var Controllers = {};
     var Page = function (name) {
         this.name = name;
         this.controller = null;
-        this.requiredScripts = ["/scripts/" + name + ".js"];
+        this.requiredScripts = ["/scripts/controllers" + name + ".js"];
     };
     Page.prototype = {
         GetControllerName: function () {

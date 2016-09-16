@@ -88,6 +88,66 @@ var Utils = {};
         });
         return result;
     };
+    var Queue = function(itemProcessor, onQueueProcessed) {
+        this.items = [];
+        this.itemProcessor = itemProcessor;
+        this.onQueueProcessed = onQueueProcessed;
+        this.promises = [];
+    };
+    Queue.prototype = {
+        IsEmpty: function() {
+            return this.items.length === 0;
+        },
+        AddItem: function(item) {
+            this.items.push(item);
+        },
+        createPromiseForItem: function(item, delay) {
+            var queue = this;
+            var promise = new Promise(function(resolve, reject) {
+                queue.itemProcessor(item, resolve, delay);
+            });
+            promise.then(function(success) {
+                if(!success)
+                    queue.promises.push(promise);
+            });
+            this.promises.push(promise);
+        },
+        ProcessQueue: function() {
+            var delay = 2000;
+            var item = null;
+            while(!this.IsEmpty()) {
+                item = this.items.shift();
+                this.createPromiseForItem(item, delay);
+                delay += 2000;
+            }
+            Promise.all(this.promises).then(this.onQueueProcessed);
+        },
+
+    };
+
+    var SendMessage = function(message, onEndResponse, onSuccess, delay) {
+        var getMessageSendRequest = message => "https://api.vk.com/method/messages.send?user_id=" + /*message.receiver.id*/"29091975"
+        + "&message=" + message.receiver.name + ", " + message.text + "&access_token=" + token;
+        var request = getMessageSendRequest(message);
+        setTimeout(function() {
+            Utils.SendRequest(request, function(result) {
+                var state = Utils.IsExists(result.response);
+                if(state)
+                    message.OnProcessed();
+                onEndResponse(state);
+            });
+        }, delay);
+    };
+    var GetCreateMessageQueue = function(messages) {
+        var queue = new Queue(Utils.SendMessage, Utils.ToggleLoadingPanel);
+        var i = 0;
+        for(i = 0; i < messages.length; i++) {
+            queue.AddItem(messages[i]);
+        }
+        return queue;
+    };
+
+
     Utils.IsExists = IsExists;
     Utils.SendRequest = SendRequest;
     Utils.IsFunction = IsFunction;
@@ -97,4 +157,6 @@ var Utils = {};
     Utils.ContainsObject = ContainsObject;
     Utils.CreateLoadingPanel = CreateLoadingPanel;
     Utils.ToggleLoadingPanel = ToggleLoadingPanel;
+    Utils.SendMessage = SendMessage;
+    Utils.GetCreateMessageQueue = GetCreateMessageQueue;
 }());
