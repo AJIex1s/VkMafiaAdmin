@@ -8,8 +8,6 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <title>Голосования</title>
     <script type="text/javascript">
-        google.charts.load('current', {'packages': ['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
         function drawChart() {
 
             var data = google.visualization.arrayToDataTable([
@@ -51,7 +49,7 @@
 
     </script>
 </head>
-<body>
+<body class="modal-open">
 <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -100,7 +98,7 @@
             </ul>
             <ul class="nav nav-sidebar send-notification-btn">
                 <li>
-                    <button type="button" class="btn btn-default btn-lg">
+                    <button type="button" class="btn btn-default btn-lg" data-dismiss="modal" data-target="#myModal">
                         Оповестить всех
                     </button>
                 </li>
@@ -142,6 +140,52 @@
             <div id="piechart1" style="width: 900px; height: 600px;"></div>
         </div>
     </div>
+</div>
+<div class="modal fade in" style="display: block;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Выберите дату и пост с голосованием</h4>
+            </div>
+            <div class="modal-body">
+
+                Посты за <input type="date" id="wallRecordsTimePicker" />
+                <script type="text/javascript">
+                    var wallRecordsTimePicker = document.getElementById("wallRecordsTimePicker");
+                    wallRecordsTimePicker.onchange = function (e) {
+                        alert(this.value);
+                    }
+                </script>
+                <br/><br/><br/>
+                <style>
+                    .post-select {
+                        overflow: hidden;
+                    }
+                    .post-select option{
+                        min-height: 35px;
+                        vertical-align: center;
+                        text-align: left;
+                        padding: 10px 10px;
+                        border-radius: 5px;
+                    }
+                </style>
+                <div class="form-group">
+                    <select multiple class="form-control post-select" id="sel1">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default">Получить данные для выбранного голосования</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade in">
 </div>
 </body>
 </html>
