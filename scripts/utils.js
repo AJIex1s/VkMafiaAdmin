@@ -125,13 +125,15 @@ var Utils = {};
 
     };
 
-    var SendMessage = function(message, onEndResponse, onSuccess, delay) {
+    var SendMessage = function(message, onEndResponse, delay) {
         var getMessageSendRequest = message => "https://api.vk.com/method/messages.send?user_id=" + /*message.receiver.id*/"29091975"
         + "&message=" + message.receiver.name + ", " + message.text + "&access_token=" + sessionStorage.token;
         var request = getMessageSendRequest(message);
         setTimeout(function() {
             Utils.SendRequest(request, function(result) {
                 var state = Utils.IsExists(result.response);
+                if(!state)
+                    console.log(result.error);
                 if(state)
                     message.OnProcessed();
                 onEndResponse(state);
