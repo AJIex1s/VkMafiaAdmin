@@ -19,20 +19,39 @@
                     date1.getMonth() == date2.getMonth() &&
                     date1.getFullYear() == date2.getFullYear();
         },
+        isPollValid: function (poll) {
+            return poll.answers &&
+                poll.answers.length >= 2 &&
+                poll.answers.every(function (answer) {
+                    return answer.text.toLowerCase().indexOf("приду") > -1 ||
+                        answer.text.toLowerCase().indexOf("без") > -1 ||
+                        answer.text.toLowerCase().indexOf("знаю") > -1 ||
+                        answer.text.toLowerCase().indexOf("не") > -1 ||
+                        answer.text.toLowerCase().indexOf("думаю") > -1 ||
+                        answer.text.toLowerCase().indexOf("хочу") > -1 ||
+                        answer.text.toLowerCase().indexOf("да") > -1 ||
+                        answer.text.toLowerCase().indexOf("нет") > -1 ||
+                        answer.text.toLowerCase().indexOf("раздумьях") > -1;
+                });
+        },
         LoadPollsByDate: function (date, success) {
             Utils.SendRequest(this.getCommand, function (result) {
                 var i;
                 var items;
                 var postWithPollData;
                 var postPuplishDate;
+                var poll = null;
                 if(!result.response)
                     throw "error during post receiving - " + result.error.toString();
                 else {
                     items = result.response.items;
                     for (i = 0; i < items.length; i++) {
                         postPuplishDate = new Date(items[i].date*1000);
-                        if(this.IsDateWithoutTimeEqual(postPuplishDate, date) && items[i].attachments)
-                            this.polls.push(this.GetPollAttachment(items[i].attachments));
+                        if(this.IsDateWithoutTimeEqual(postPuplishDate, date) && items[i].attachments) {
+                            poll = this.GetPollAttachment(items[i].attachments);
+                            if(this.isPollValid(poll))
+                                this.polls.push(poll);
+                        }
                     }
                     success(this.polls);
                 }

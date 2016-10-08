@@ -61,8 +61,9 @@ var onScripStartLoading = function() {
             this.votingMembers = votingMembers.slice();
         },
         LoadData: function(onDataLoaded) {
-            debugger;
-            this.fillAnswers(this.poll.answers);
+            if(this.poll)
+                this.fillAnswers(this.poll.answers);
+            else throw "poll not loaded";
 
             Utils.SendRequest(this.getVotersCommand(), function(msg) {
                 this.fillVotedUsers(msg.response);

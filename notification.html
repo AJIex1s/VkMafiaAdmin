@@ -7,49 +7,7 @@
     <link href="stylesheets/bootstrap.css" rel="stylesheet" type="text/css"/>
     <link href="stylesheets/bootstrap-theme.css" rel="stylesheet" type="text/css"/>
     <link href="stylesheets/main.css" rel="stylesheet" type="text/css"/>
-    <!--<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>-->
     <title>Голосования</title>
-    <script type="text/javascript">
-     /*   function drawChart() {
-
-            var data = google.visualization.arrayToDataTable([
-                ['Task', 'Процент от проголосовавших'],
-                ['Постоянные участники', 8],
-                ['Непостоянные участники', 6],
-                ['Ожидаемые прогульщики', 2],
-                ['Не придут', 2],
-                ['Не знающие', 7]
-            ]);
-
-            var options = {};
-
-            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
-
-            chart.draw(data, options);
-
-
-            var data1 = google.visualization.arrayToDataTable([
-                ['Task', 'Процент от проголосовавших'],
-                ['Проголосовавшие', 18],
-                ['Не проголосовавшие', 6],
-                ['Придут', 12]
-            ]);
-
-            var options1 = {};
-
-            var chart1 = new google.visualization.PieChart(document.getElementById('piechart1'));
-
-            chart1.draw(data1, options1);
-        }
-
-        function drawChart1() {
-
-        }
-
-        google.charts.load('current', {'packages': ['corechart']});
-        google.charts.setOnLoadCallback(drawChart);*/
-
-    </script>
 </head>
 <body class="modal-open">
 <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -65,37 +23,32 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" class="disabled">Information</a>
+                </li>
                 <li class="active">
-                    <a href="#">Information</a>
+                    <a href="/notification.html">Notification admin</a>
                 </li>
                 <li>
-                    <a href="#">Notification admin</a>
-                </li>
-                <li>
-                    <a href="#">Grooup amdin</a>
+                    <a href="#" class="disabled">Grooup amdin</a>
                 </li>
             </ul>
-
-            <form class="navbar-form navbar-right">
-                <input type="text" class="form-control" placeholder="Search...">
-            </form>
         </div>
     </div>
 </div>
 <div class="container-fluid">
-            <h1 class="page-header">На играх ожидается Н - человек</h1>
-            Вероятный прирост людей на играх - Н человек
-            <div class="table-responsive">
-                <table class="table table-striped right-aligned-cells" id="votingGlobalInfo">
-                </table>
-            </div>
-            <button></button>
-<!--
-            <div id="piechart" style="width: 900px; height: 600px;"></div>
-            <h2 class="sub-header">Статистика по прогульщикам</h2>
-            <div id="piechart1" style="width: 900px; height: 600px;"></div>-->
+    <h1 class="page-header">На играх ожидается <span id="expectedPeopleCount"></span> - человек</h1>
+    <p style="display: none;">Вероятный прирост людей на играх - Н человек</p>
+    <div class="table-responsive">
+        <table class="table table-striped right-aligned-cells" id="votingGlobalInfo">
+        </table>
+    </div>
+    <button class="btn btn-primary" id="allToNotificate">Оповестить всех (<span id="usersToNotifyCount">1</span>)</button>
+    <button class="btn btn-info" id="notifyNotVoted">Оповестить не голосовавших (<span id="notVotedCount">1</span>)</button>
+    <button class="btn btn-info" id="clarifyUndecided">Уточнить позицию у незнающих (<span id="undecidedVotersCount">1</span>)</button>
+    <button class="btn btn-info" id="clarifyNegativeVoted">Уточнить у проголосовавших отрицательно(<span id="negativeVotedCount">1</span>) </button>
 </div>
-<div id="pollDataModal" class="modal fade in" style="display: none;">
+<div id="pollDataModal" class="modal fade in" style="display: block;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -103,7 +56,7 @@
             </div>
             <div class="modal-body">
 
-                Посты за <input type="date" id="pollPublishedDate" />
+                Посты за <input type="date" id="pollPublishedDate"/>
                 <br/><br/><br/>
                 <div class="form-group">
                     <select multiple class="form-control post-select" id="pollList">
@@ -111,12 +64,14 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="getPollDataButton" type="button" class="btn btn-default">Получить данные для выбранного голосования</button>
+                <button id="getPollDataButton" type="button" class="btn btn-default">Получить данные для выбранного
+                    голосования
+                </button>
             </div>
         </div>
     </div>
 </div>
-<div id="modalBackdrop" class="modal-backdrop fade in" style="display: none;">
+<div id="modalBackdrop" class="modal-backdrop fade in" style="display: block;">
 </div>
 </body>
 </html>
