@@ -1,0 +1,66 @@
+﻿<html>
+<head>
+    <script type="text/javascript" src="scripts/utils.js"></script>
+    <script type="text/javascript" src="scripts/route.js"></script>
+    <link href="stylesheets/main.css" rel="stylesheet" type="text/css"/>
+    <link href="stylesheets/bootstrap.css" rel="stylesheet" type="text/css"/>
+    <link href="stylesheets/bootstrap-theme.css" rel="stylesheet" type="text/css"/>
+    <style>
+    </style>
+    <!--<script>-->
+    <!--initApp();-->
+    <!--</script>-->
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#">Information</a>
+                </li>
+                <li>
+                    <a href="#">Statistics</a>
+                </li>
+                <li>
+                    <a href="#">Poll Admin</a>
+                </li>
+                <li>
+                    <a href="#">Send Voting</a>
+                </li>
+            </ul>
+        </div>
+        <div class="content col-md-12">
+            <br/><br/><br/>
+            <div class="search">
+                <div>
+                    <input type="text" id="votingLink"/>
+                </div>
+                <div>
+                    <input type="button" value="get allUsers info" id="prepareUsersInfo" class="btn"/>
+                </div>
+            </div>
+
+            <div class="notVotedUsers" style="display: none;">
+                <span id="infoStatus"></span><span>chat members are voted on this poll </span><span
+                    id="votingUrl"></span>
+                <br/><br/>
+                <hr/>
+                <div>
+                    <input type="button" value="send warning" id="sendWarning" class="btn"/>
+                </div>
+                <div>
+                    <table id="notVotedUsers" style="border: 1px solid; border-collapse: collapse;">
+                        <tr>
+                            <td>ID</td>
+                            <td>Имя нехорошего человека</td>
+                            <td>Статус отсылки сообщения</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

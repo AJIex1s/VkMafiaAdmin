@@ -161,13 +161,13 @@ var Utils = {};
         return result;
     };
     var ControllerRequiredModels = {
-        "notification": "poll"
+        "notification": "poll,wall"
     };
-    var TryGetControllerModelName = function(name) {
-        var modelName = null;
+    var TryGetControllerModelNames = function(name) {
+        var modelNames = "";
         if(Object.keys(ControllerRequiredModels).indexOf(name) > -1)
-            modelName = ControllerRequiredModels[name];
-        return modelName;
+            modelNames = ControllerRequiredModels[name];
+        return modelNames;
     };
     Utils.IsExists = IsExists;
     Utils.SendRequest = SendRequest;
@@ -181,5 +181,5 @@ var Utils = {};
     Utils.SendMessage = SendMessage;
     Utils.GetCreateMessageQueue = GetCreateMessageQueue;
     Utils.GetCreateMessages = GetCreateMessages;
-    Utils.TryGetPageModelName = TryGetControllerModelName;
+    Utils.TryGetPageModelNames = TryGetControllerModelNames;
 }());

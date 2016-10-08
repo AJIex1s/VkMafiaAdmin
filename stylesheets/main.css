@@ -59,7 +59,19 @@ body {
 .send-notification-btn {
     margin:0 auto;
 }
-
+.post-select {
+    overflow: hidden;
+}
+.post-select option{
+    min-height: 35px;
+    vertical-align: center;
+    text-align: left;
+    padding: 10px 10px;
+    border-radius: 5px;
+}
+.right-aligned-cells td:not(*:first-child){
+    text-align: right;
+}
 /*
  * Main content
  */

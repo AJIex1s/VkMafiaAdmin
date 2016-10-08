@@ -1,106 +1,153 @@
 (function() {
     var NotificationPageController = function() {
         //<gui elements>
-        this.infoStatusElement = null;
-        this.votingLinkInputElement = null;
-        this.prepareUsersInfoButton = null;
+        this.getPollDataButtonElement = null;
+        this.pollDataModalClose = document.getElementById("pollDataModalClose");
+        this.pollDataModal = document.getElementById("pollDataModal");
         this.sendWarningButton = null;
-        this.notVotedUsersElement = null;
-        this.notVotedUsersELement = null;
+        this.votingGlobalInfoTableElement = null;
+        this.pollPublishedDateElement = null;
+        this.pollListElement = null;
         //</gui elements>
         this.votedUsers = [];
         this.notVotedUses = [];
-        this.linkSplitter = "w=poll";
-        this.poll = null;
+        this.linkSplitter = "w=selectedPoll";
+        this.selectedPoll = null;
+        this.pollData = null;
+        this.polls = [];
         this.Initialize();
     };
 
     NotificationPageController.prototype = {
         Initialize: function() {
             //events
-            Utils.AddEveventHandlerToElement(this.GetPrepareUsersInfoButtonElement(), "click", this.OnPrepareUsersInfoButtonClick.bind(this));
-            Utils.AddEveventHandlerToElement(this.GetSendWarningButtonElement(), "click", this.OnSendNotificationButtonClick.bind(this));
-        },
-        getPostId: function() {
-            var postUrlInput = this.GetPostUrlInputElement();
-            if(!Utils.IsExists(postUrlInput) || this.GetPostURLValue() == "")
-                return "-83223612_893";
-            return this.GetPostURLValue().split(this.linkSplitter)[1];
+            this.GetPollPublishedDateElement().onchange = function (evt) {
+                alert(evt.target.value);
+                this.OnPollDateSelected(evt.target.value);
+            }.bind(this);
+
+            Utils.AddEveventHandlerToElement(this.GetPollDataButtonElement(), "click", this.OnGetPollDataButtonClick.bind(this));
+
+
+            //Utils.AddEveventHandlerToElement(this.GetSendWarningButtonElement(), "click", this.OnSendNotificationButtonClick.bind(this));
         },
         //event handlers
-        OnPrepareUsersInfoButtonClick: function() {
-            Utils.ToggleLoadingPanel();
-            this.poll = DataSources.GetCreatePollDatasource(this.getPostId());
-            this.poll.LoadData(function() {
-                this.SetInfoStatusText(this.poll.GetVotedUsers().length);
-                Utils.ToggleElement(this.GetNotVotedUsersElement());
-                Utils.ToggleLoadingPanel();
-            }.bind(this));
-        },
+/*
         OnSendNotificationButtonClick: function() {
             Utils.ToggleLoadingPanel();
-            var messages = Utils.GetCreateMessages(this.poll.GetNotVotedUsers(), this.AddRecordToInfoTable.bind(this));
+            var messages = Utils.GetCreateMessages(this.pollData.GetNotVotedUsers(), this.AddRecordToInfoTable.bind(this));
             var queue = Utils.GetCreateMessageQueue(messages);
             queue.ProcessQueue();
+        },*/
+
+        CloseGetPollDataModal: function () {
+            var body = document.getElementsByTagName("body");
+            this.pollDataModal.style.display = "none";
+            var overlay = document.getElementById("modalBackdrop");
+            overlay.style.display = "none";
+            body.className = "";
         },
-        AddRecordToInfoTable: function(receiver) {
-            var date = new Date();
-            this.addRecordToInfoTableCore([
-                receiver.id,
-                receiver.name,
-                "Message send on " + date.toLocaleDateString() + " " +
-                date.toLocaleTimeString()
-            ]);
+        OnGetPollDataButtonClick: function() {
+            Utils.ToggleLoadingPanel();
+            this.OnPollSelected(this.GetPollListElement().selectedIndex);
+            this.pollData = DataSources.GetCreatePollDatasource(this.selectedPoll);
+            this.pollData.LoadData(function() {
+                Utils.ToggleLoadingPanel();
+                this.FillInfoTable();
+                this.CloseGetPollDataModal();
+            }.bind(this));
         },
-        addRecordToInfoTableCore: function(cellValues) {
-            var record = this.GetNotVotedUsersTableElement().insertRow();
+        OnPollDateSelected: function (value) {
+            Utils.ToggleLoadingPanel();
+            var wallData = DataSources.GetCreateWallData("-126602918");
+            var selectedDate = new Date(value);
+            wallData.LoadPollsByDate(selectedDate, this.FillPollList.bind(this));
+        },
+        OnPollSelected: function (itemNumber) {
+            this.selectedPoll = this.polls[itemNumber];
+        },
+        // end
+        FillPollList: function(polls) {
+            var i;
+            var option;
+            for(i = 0; i < polls.length; i++) {
+                option = document.createElement("option");
+                option.text = polls[i].question;
+                this.GetPollListElement().options.add(option);
+                this.polls.push(polls[i]);
+            }
+            Utils.ToggleLoadingPanel();
+        },
+        GetInfoTableHeaderCellValues: function (answers) {
+            var i;
+            var cellValues = [];
+            cellValues.push("#");
+            for(i = 0; i < answers.length; i++) {
+                cellValues.push(answers[i].text);
+            }
+            return cellValues;
+        },
+        GetInfoTableRowCellValues: function (answers) {
+            var i;
+            var cellValues = [];
+            cellValues.push("Количество проголосовавших");
+            for(i = 0; i < answers.length; i++) {
+                //noinspection JSUnresolvedVariable
+                cellValues.push(answers[i].votes);
+            }
+            return cellValues;
+        },
+        FillInfoTable: function() {
+            var answers = this.pollData.GetAnswers();
+            //fix insertion order
+            //not voted
+            var lastRowCellValues = ["Не проголосовало", this.pollData.GetNotVotedUsers().length];
+            var lastRowRecord = this.addRecordToInfoTableCore(lastRowCellValues, false);
+            lastRowRecord.cells[lastRowRecord.cells.length - 1].setAttribute("colspan", (answers.length).toString());
+            //voters
+            this.addRecordToInfoTableCore(this.GetInfoTableRowCellValues(answers), false);
+            //header
+            this.addRecordToInfoTableCore(this.GetInfoTableHeaderCellValues(answers), true);
+        },
+        GetCreateRow: function (isHeaderRow) {
+            var rowParent = !isHeaderRow ? this.GetNotVotedUsersTableElement() :
+                this.GetNotVotedUsersTableElement().createTHead();
+            return rowParent.insertRow(0);
+        },
+        addRecordToInfoTableCore: function(cellValues, isHeaderRecord) {
+            var record = this.GetCreateRow(isHeaderRecord);
             for(var i = 0; i < cellValues.length; i++) {
                 var recordCell = record.insertCell(-1);
                 recordCell.innerHTML = cellValues[i];
             }
+            return record;
         },
 
         //GUI
-
-        //<pollInfo>
-        InfoStatus: function() {
-            if(!Utils.IsExists(this.infoStatusElement))
-                this.infoStatusElement = document.getElementById("infoStatus");
-            return this.infoStatusElement;
+        GetPollDataButtonElement: function () {
+            if(!this.getPollDataButtonElement)
+                this.getPollDataButtonElement = document.getElementById("getPollDataButton");
+            return this.getPollDataButtonElement;
         },
-        SetInfoStatusText: function(text) {
-            this.InfoStatus().innerHTML = text;
+        GetPollPublishedDateElement: function () {
+            if(!this.pollPublishedDateElement)
+                this.pollPublishedDateElement = document.getElementById("pollPublishedDate");
+            return this.pollPublishedDateElement;
         },
-
-        GetPostUrlInputElement: function() {
-            if(!Utils.IsExists(this.votingLinkInputElement))
-                this.votingLinkInputElement = document.getElementById("votingLink");
-            return this.votingLinkInputElement;
+        GetPollListElement: function () {
+            if(!this.pollListElement)
+                this.pollListElement = document.getElementById("pollList");
+            return this.pollListElement;
         },
-        GetPostURLValue: function() {
-            return this.GetPostUrlInputElement().value;
-        },
-        GetPrepareUsersInfoButtonElement: function() {
-            if(!Utils.IsExists(this.prepareUsersInfoButton))
-                this.prepareUsersInfoButton = document.getElementById("prepareUsersInfo");
-            return this.prepareUsersInfoButton;
-        },
-        //</pollInfo>
-
         GetSendWarningButtonElement: function() {
             if(!Utils.IsExists(this.sendWarningButton))
                 this.sendWarningButton = document.getElementById("sendWarning");
             return this.sendWarningButton;
         },
         GetNotVotedUsersTableElement: function() {
-            if(!this.notVotedUsersElement)
-                this.notVotedUsersElement = document.getElementById("notVotedUsers");
-            return this.notVotedUsersElement;
-        },
-        GetNotVotedUsersElement: function() {
-            if(!this.notVotedUsersELement)
-                this.notVotedUsersELement = document.querySelector(".notVotedUsers");
-            return this.notVotedUsersELement;
+            if(!this.votingGlobalInfoTableElement)
+                this.votingGlobalInfoTableElement = document.getElementById("votingGlobalInfo");
+            return this.votingGlobalInfoTableElement;
         },
 
     };

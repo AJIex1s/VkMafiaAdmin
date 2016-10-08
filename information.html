@@ -10,44 +10,44 @@
     <!--<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>-->
     <title>Голосования</title>
     <script type="text/javascript">
-     /*   function drawChart() {
+        /*   function drawChart() {
 
-            var data = google.visualization.arrayToDataTable([
-                ['Task', 'Процент от проголосовавших'],
-                ['Постоянные участники', 8],
-                ['Непостоянные участники', 6],
-                ['Ожидаемые прогульщики', 2],
-                ['Не придут', 2],
-                ['Не знающие', 7]
-            ]);
+         var data = google.visualization.arrayToDataTable([
+         ['Task', 'Процент от проголосовавших'],
+         ['Постоянные участники', 8],
+         ['Непостоянные участники', 6],
+         ['Ожидаемые прогульщики', 2],
+         ['Не придут', 2],
+         ['Не знающие', 7]
+         ]);
 
-            var options = {};
+         var options = {};
 
-            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+         var chart = new google.visualization.PieChart(document.getElementById('piechart'));
 
-            chart.draw(data, options);
+         chart.draw(data, options);
 
 
-            var data1 = google.visualization.arrayToDataTable([
-                ['Task', 'Процент от проголосовавших'],
-                ['Проголосовавшие', 18],
-                ['Не проголосовавшие', 6],
-                ['Придут', 12]
-            ]);
+         var data1 = google.visualization.arrayToDataTable([
+         ['Task', 'Процент от проголосовавших'],
+         ['Проголосовавшие', 18],
+         ['Не проголосовавшие', 6],
+         ['Придут', 12]
+         ]);
 
-            var options1 = {};
+         var options1 = {};
 
-            var chart1 = new google.visualization.PieChart(document.getElementById('piechart1'));
+         var chart1 = new google.visualization.PieChart(document.getElementById('piechart1'));
 
-            chart1.draw(data1, options1);
-        }
+         chart1.draw(data1, options1);
+         }
 
-        function drawChart1() {
+         function drawChart1() {
 
-        }
+         }
 
-        google.charts.load('current', {'packages': ['corechart']});
-        google.charts.setOnLoadCallback(drawChart);*/
+         google.charts.load('current', {'packages': ['corechart']});
+         google.charts.setOnLoadCallback(drawChart);*/
 
     </script>
 </head>
@@ -83,17 +83,43 @@
     </div>
 </div>
 <div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="#">Общая информация</a></li>
+                <!-- Статистика по проголосовавшим, процент пршедших пропускальщиков процент новичков процент старичко
+                 процент тех которые придут процент которые не придут процент думающих-->
+            </ul>
+            <ul class="nav nav-sidebar">
+                <li><a href="#">Те которые придут</a></li>
+                <li><a href="#">Те которые сомневаются</a></li>
+                <li><a href="#">Те которые не придут</a></li>
+            </ul>
+            <ul class="nav nav-sidebar">
+                <li><a href="#">Не проголосовавшие</a></li>
+            </ul>
+            <ul class="nav nav-sidebar send-notification-btn">
+                <li>
+                    <button type="button" class="btn btn-default btn-lg" id="sendWarning">
+                        Оповестить всех
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             <h1 class="page-header">На играх ожидается Н - человек</h1>
-            Вероятный прирост людей на играх - Н человек
+
             <div class="table-responsive">
                 <table class="table table-striped right-aligned-cells" id="votingGlobalInfo">
                 </table>
             </div>
-            <button></button>
-<!--
-            <div id="piechart" style="width: 900px; height: 600px;"></div>
-            <h2 class="sub-header">Статистика по прогульщикам</h2>
-            <div id="piechart1" style="width: 900px; height: 600px;"></div>-->
+            <h2 class="sub-header">Статистика по посещаемости</h2>
+            <!--
+                        <div id="piechart" style="width: 900px; height: 600px;"></div>
+                        <h2 class="sub-header">Статистика по прогульщикам</h2>
+                        <div id="piechart1" style="width: 900px; height: 600px;"></div>-->
+        </div>
+    </div>
 </div>
 <div id="pollDataModal" class="modal fade in" style="display: none;">
     <div class="modal-dialog">

@@ -44,10 +44,8 @@ var onScripStartLoading = function() {
     // end TODO
 
 
-    var PollDataSource = function(postId) {
-        this.postId = postId;
-        this.getPollCommand = "https://api.vk.com/method/wall.getById?posts=" + this.postId
-            + "&extended=1&copy_history_depth=2&v=5.52&access_token=" + sessionStorage.token;
+    var PollDataSource = function(poll) {
+        this.poll = poll;
         this.answerIds = [];
         this.answers = [];
         this.votingMembers = [];
@@ -62,34 +60,16 @@ var onScripStartLoading = function() {
         fillVotingMembers: function() {
             this.votingMembers = votingMembers.slice();
         },
-        tryGetPollAttachment: function(attachments) {
-            var i, count = attachments.length;
-            for(i = 0; i < count; i++) {
-                if(attachments[i].type == "poll")
-                    return attachments[i].poll;
-            }
-            throw "poll not found in attachments";
-        },
         LoadData: function(onDataLoaded) {
-            Utils.SendRequest(this.getPollCommand, function(msg) {
-                var postAttachments, poll;
-                if(!msg || !msg.response) {
-                    console.log(msg);
-                    return alert("error by answers request");
+            debugger;
+            this.fillAnswers(this.poll.answers);
+
+            Utils.SendRequest(this.getVotersCommand(), function(msg) {
+                this.fillVotedUsers(msg.response);
+                this.fillNotVotedUsers();
+                if(Utils.IsExists(onDataLoaded) && Utils.IsFunction(onDataLoaded)) {
+                    onDataLoaded();
                 }
-
-                //noinspection JSUnresolvedVariable
-                postAttachments = msg.response.items[0].attachments;
-                poll = this.tryGetPollAttachment(postAttachments);
-                this.fillAnswers(poll.answers);
-
-                Utils.SendRequest(this.getVotersCommand(poll.id), function(msg) {
-                    this.fillVotedUsers(msg.response);
-                    this.fillNotVotedUsers();
-                    if(Utils.IsExists(onDataLoaded) && Utils.IsFunction(onDataLoaded)) {
-                        onDataLoaded();
-                    }
-                }.bind(this));
             }.bind(this));
         },
         fillAnswers: function(answers) {
@@ -119,13 +99,19 @@ var onScripStartLoading = function() {
                 }
             }.bind(this));
         },
-        getVotersCommand: function(pollId) {
-            return "https://api.vk.com/method/polls.getVoters?owner_id=" + this.postId.split("_")[0] +
-                "&poll_id=" + pollId + "&answer_ids=" + this.getAnswerIdsAsString() +
+        getVotersCommand: function() {
+            return "https://api.vk.com/method/polls.getVoters?owner_id=-126602918" +
+                "&poll_id=" + this.poll.id + "&answer_ids=" + this.getAnswerIdsAsString() +
                 "&fields=nickname&name_case=nom&v=5.52&access_token=" + sessionStorage.token;
         },
         getAnswerIdsAsString: function() {
             return this.getAnswerIds().toString();
+        },
+        GetAnswers: function () {
+            return this.answers;
+        },
+        GetNotVotedUsers: function () {
+            return this.notVotedUses;
         },
         //setters getters
         getAnswerIds: function() {
@@ -135,15 +121,9 @@ var onScripStartLoading = function() {
                 });
             return this.answerIds;
         },
-        GetVotedUsers: function() {
-            return this.votedUsers;
-        },
-        GetNotVotedUsers: function() {
-            return this.notVotedUses;
-        }
     };
-    var GetCreatePollDatasource = function(postId) {
-        return new PollDataSource(postId);
+    var GetCreatePollDatasource = function(poll) {
+        return new PollDataSource(poll);
     };
     DataSources.PollDataSource = PollDataSource;
     DataSources.GetCreatePollDatasource = GetCreatePollDatasource;

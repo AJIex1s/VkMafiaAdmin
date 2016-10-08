@@ -11,9 +11,13 @@ var DataSources = {};
     };
     Page.prototype = {
         Initialize: function() {
-            var modelName = Utils.TryGetPageModelName(this.name);
-            if(modelName)
-                this.addModelScript(modelName);
+            var modelNames = Utils.TryGetPageModelNames(this.name).split(",");
+            var i;
+            if(modelNames.length != 0) {
+                for (i = 0; i < modelNames.length; i++) {
+                    this.addModelScript(modelNames[i]);
+                }
+            }
             this.addControllerScript();
         },
         addModelScript: function(modelName) {
@@ -72,7 +76,7 @@ var DataSources = {};
                 var script = document.querySelector("script[src*='"+this.page.name+"']");
                 script.onload = function () {
                     this.CreatePageController();
-                }.bind(this)
+                }.bind(this);
             },
             CreatePageController: function () {
                 return this.page.CreateController();
