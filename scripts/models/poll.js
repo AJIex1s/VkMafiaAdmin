@@ -44,16 +44,18 @@ var onScripStartLoading = function() {
     // end TODO
 
 
-    var PollDataSource = function(poll) {
+    var PollVotersData = function(poll) {
         this.poll = poll;
         this.answerIds = [];
         this.answers = [];
         this.votingMembers = [];
         this.votedUsers = [];
         this.notVotedUses = [];
+        this.undecidedVoters = [];
+        this.negativeVotedUsers = [];
         this.Initialize();
     };
-    PollDataSource.prototype = {
+    PollVotersData.prototype = {
         Initialize: function() {
             this.fillVotingMembers();
         },
@@ -82,15 +84,15 @@ var onScripStartLoading = function() {
             var result = [];
             for(var j = 0; j < response.length; j++) {
                 //noinspection JSUnresolvedVariable
-                var users = response[j].users.items;
-                for(var i = 0; i < users.length; i++) {
-                    //noinspection JSUnresolvedVariable
-                    var userObj = new User(users[i].id, users[i].first_name + " " + users[i].last_name);
-                    if(Utils.ContainsObject(this.votingMembers, userObj))
-                        this.votedUsers.push(userObj);
-                }
+                var users = this.getUserCollection(response[j].users.items);
+                this.votedUsers.concat(users);
+                // define undecided & negative voters only by indirect sign
+                // TODO check possibility to define it by direct sign
+                if(j == 1)
+                    this.undecidedVoters.concat(users);
+                else if(j == 2)
+                    this.negativeVotedUsers.concat(users);
             }
-            return result;
         },
         fillNotVotedUsers: function() {
             this.notVotedUses = [];
@@ -99,6 +101,17 @@ var onScripStartLoading = function() {
                     this.notVotedUses.push(user);
                 }
             }.bind(this));
+        },
+        getUserCollection: function (users) {
+            var result = [];
+            for(var i = 0; i < users.length; i++) {
+                //noinspection JSUnresolvedVariable
+                var userObj = new User(users[i].id, users[i].first_name + " " + users[i].last_name);
+                if(Utils.ContainsObject(this.votingMembers, userObj)) {
+                    result.push(userObj);
+                }
+            }
+            return result;
         },
         getVotersCommand: function() {
             return "https://api.vk.com/method/polls.getVoters?owner_id=-126602918" +
@@ -123,9 +136,9 @@ var onScripStartLoading = function() {
             return this.answerIds;
         },
     };
-    var GetCreatePollDatasource = function(poll) {
-        return new PollDataSource(poll);
+    var GetCreatePollVotersData = function(poll) {
+        return new PollVotersData(poll);
     };
-    DataSources.PollDataSource = PollDataSource;
-    DataSources.GetCreatePollDatasource = GetCreatePollDatasource;
+    DataSources.PollDataSource = PollVotersData;
+    DataSources.GetCreatePollVotersData = GetCreatePollVotersData;
 }());

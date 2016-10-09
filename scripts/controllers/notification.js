@@ -1,26 +1,16 @@
 (function () {
     var NotificationPageController = function () {
         //<gui elements>
-        this.getPollDataButtonElement = null;
-        this.pollDataModalClose_htmlElement = document.getElementById("pollDataModalClose");
         this.pollDataModal_htmlElement = document.getElementById("pollDataModal");
-        this.notifyNotVoted_htmlElement = document.getElementById("notifyNotVoted");
-        this.clarifyUndecided_htmlElement = document.getElementById("clarifyUndecided");
-        this.clarifyNegativeVoted_htmlElement = document.getElementById("clarifyNegativeVoted");
         this.notVotedCount_htmlElement = document.getElementById("notVotedCount");
         this.undecidedVotersCount_htmlElement = document.getElementById("undecidedVotersCount");
         this.negativeVotedCount_htmlElement = document.getElementById("negativeVotedCount");
         this.usersToNotifyCount_htmlElement = document.getElementById("usersToNotifyCount");
-        this.sendWarningButton = null;
         this.votingGlobalInfoTableElement = null;
-        this.pollPublishedDateElement = null;
         this.pollListElement = null;
         //</gui elements>
-        this.votedUsers = [];
-        this.notVotedUses = [];
-        this.linkSplitter = "w=selectedPoll";
         this.selectedPoll = null;
-        this.pollData = null;
+        this.pollVotersData = null;
         this.polls = [];
         this.Initialize();
     };
@@ -28,18 +18,53 @@
     NotificationPageController.prototype = {
         Initialize: function () {
             //events
-            this.GetPollPublishedDateElement().onchange = function (evt) {
+            var pollVotersDataButton_htmlElement = document.getElementById("pollVotersDataButton");
+            var notifyNotVoted_htmlElement = document.getElementById("notifyNotVoted");
+            var clarifyNegativeVoted_htmlElement = document.getElementById("clarifyNegativeVoted");
+            var clarifyUndecided_htmlElement = document.getElementById("clarifyUndecided");
+            var pollPublishDatePicker_htmlElement = document.getElementById("pollPublishDatePicker");
+
+            pollPublishDatePicker_htmlElement.onchange = function (evt) {
                 this.OnPollDateSelected(evt.target.value);
             }.bind(this);
 
-            Utils.AddEveventHandlerToElement(this.GetPollDataButtonElement(), "click", this.OnGetPollDataButtonClick.bind(this));
+            Utils.AddEveventHandlerToElement(pollVotersDataButton_htmlElement, "click", this.OnGetPollVotersDataButtonClick.bind(this));
 
-            Utils.AddEveventHandlerToElement(this.notifyNotVoted_htmlElement, "click", this.OnNotifyNotVotedButtonClick.bind(this));
+            Utils.AddEveventHandlerToElement(notifyNotVoted_htmlElement, "click", this.OnNotifyNotVotedButtonClick.bind(this));
+            Utils.AddEveventHandlerToElement(clarifyNegativeVoted_htmlElement, "click", this.OnClarifyNegativeVotedButtonClick.bind(this));
+            Utils.AddEveventHandlerToElement(clarifyUndecided_htmlElement, "click", this.OnClarifyUndecidedButtonClick.bind(this));
+        },
+        reduceUndecidedVotersCount: function () {
+            var undecidedVotersCount = parseInt(this.undecidedVotersCount_htmlElement.innerHTML);
+            undecidedVotersCount -= 1;
+            this.undecidedVotersCount_htmlElement.innerHTML = undecidedVotersCount;
+        },
+        reduceNegativeVotedCount: function () {
+            var negativeVotedCount = parseInt(this.negativeVotedCount_htmlElement.innerHTML);
+            negativeVotedCount -= 1;
+            this.negativeVotedCount_htmlElement.innerHTML = negativeVotedCount;
+        },
+        reduceNotVotedCount: function () {
+            var notVotedCount = parseInt(this.notVotedCount_htmlElement.innerHTML);
+            notVotedCount -= 1;
+            this.notVotedCount_htmlElement.innerHTML = notVotedCount;
         },
         //event handlers
         OnNotifyNotVotedButtonClick: function () {
             Utils.ToggleLoadingPanel();
-            var messages = Utils.GetCreateMessages(this.pollData.GetNotVotedUsers(), this.AddRecordToInfoTable.bind(this));
+            var messages = Utils.GetCreateMessages(this.pollVotersData.GetNotVotedUsers(), this.reduceNotVotedCount.bind(this));
+            var queue = Utils.GetCreateMessageQueue(messages);
+            queue.ProcessQueue();
+        },
+        OnClarifyUndecidedButtonClick: function () {
+            Utils.ToggleLoadingPanel();
+            var messages = Utils.GetCreateMessages(this.pollVotersData.GetAnswers()[1], this.reduceUndecidedVotersCount.bind(this));
+            var queue = Utils.GetCreateMessageQueue(messages);
+            queue.ProcessQueue();
+        },
+        OnClarifyNegativeVotedButtonClick: function () {
+            Utils.ToggleLoadingPanel();
+            var messages = Utils.GetCreateMessages(this.pollVotersData.GetNotVotedUsers(), this.reduceNegativeVotedCount.bind(this));
             var queue = Utils.GetCreateMessageQueue(messages);
             queue.ProcessQueue();
         },
@@ -51,7 +76,7 @@
             overlay.style.display = "none";
             body.className = "";
         },
-        OnGetPollDataButtonClick: function () {
+        OnGetPollVotersDataButtonClick: function () {
             Utils.ToggleLoadingPanel();
             this.OnPollSelected(this.GetPollListElement().selectedIndex);
             if (!this.selectedPoll) {
@@ -59,8 +84,8 @@
                 Utils.ToggleLoadingPanel();
                 return;
             }
-            this.pollData = DataSources.GetCreatePollDatasource(this.selectedPoll);
-            this.pollData.LoadData(function () {
+            this.pollVotersData = DataSources.GetCreatePollVotersData(this.selectedPoll);
+            this.pollVotersData.LoadData(function () {
                 try {
                     Utils.ToggleLoadingPanel();
                     this.FillInfoTable();
@@ -86,6 +111,7 @@
             var option;
             for (i = 0; i < polls.length; i++) {
                 option = document.createElement("option");
+                //noinspection JSUnresolvedVariable
                 option.text = polls[i].question;
                 this.GetPollListElement().options.add(option);
                 this.polls.push(polls[i]);
@@ -113,10 +139,10 @@
             return cellValues;
         },
         FillInfoTable: function () {
-            var answers = this.pollData.GetAnswers();
+            var answers = this.pollVotersData.GetAnswers();
             //fix insertion order
             //not voted
-            var notVotedUsersCount = this.pollData.GetNotVotedUsers().length;
+            var notVotedUsersCount = this.pollVotersData.GetNotVotedUsers().length;
             var votesCountForEachAnswer = this.GetVotesCountForEachAnswer(answers);
             this.notVotedCount_htmlElement.innerHTML = notVotedUsersCount;
             this.undecidedVotersCount_htmlElement.innerHTML = votesCountForEachAnswer[1];
@@ -138,6 +164,7 @@
             var expectedPeopleCount = document.getElementById("expectedPeopleCount");
             //</header row>
 
+            //noinspection JSUnresolvedVariable
             expectedPeopleCount.innerHTML = " " + answers[0].votes + " ";
         },
         GetCreateRow: function (isHeaderRow) {
@@ -155,25 +182,10 @@
         },
 
         //GUI
-        GetPollDataButtonElement: function () {
-            if (!this.getPollDataButtonElement)
-                this.getPollDataButtonElement = document.getElementById("getPollDataButton");
-            return this.getPollDataButtonElement;
-        },
-        GetPollPublishedDateElement: function () {
-            if (!this.pollPublishedDateElement)
-                this.pollPublishedDateElement = document.getElementById("pollPublishedDate");
-            return this.pollPublishedDateElement;
-        },
         GetPollListElement: function () {
             if (!this.pollListElement)
                 this.pollListElement = document.getElementById("pollList");
             return this.pollListElement;
-        },
-        GetSendWarningButtonElement: function () {
-            if (!Utils.IsExists(this.sendWarningButton))
-                this.sendWarningButton = document.getElementById("sendWarning");
-            return this.sendWarningButton;
         },
         GetNotVotedUsersTableElement: function () {
             if (!this.votingGlobalInfoTableElement)
