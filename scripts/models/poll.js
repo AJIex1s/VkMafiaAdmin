@@ -50,7 +50,7 @@ var onScripStartLoading = function() {
         this.answers = [];
         this.votingMembers = [];
         this.votedUsers = [];
-        this.notVotedUses = [];
+        this.notVotedUsers = [];
         this.undecidedVoters = [];
         this.negativeVotedUsers = [];
         this.Initialize();
@@ -85,20 +85,20 @@ var onScripStartLoading = function() {
             for(var j = 0; j < response.length; j++) {
                 //noinspection JSUnresolvedVariable
                 var users = this.getUserCollection(response[j].users.items);
-                this.votedUsers.concat(users);
+                this.votedUsers = this.votedUsers.concat(users);
                 // define undecided & negative voters only by indirect sign
                 // TODO check possibility to define it by direct sign
                 if(j == 1)
-                    this.undecidedVoters.concat(users);
+                    this.undecidedVoters = this.undecidedVoters.concat(users);
                 else if(j == 2)
-                    this.negativeVotedUsers.concat(users);
+                    this.negativeVotedUsers = this.negativeVotedUsers.concat(users);
             }
         },
         fillNotVotedUsers: function() {
-            this.notVotedUses = [];
+            this.notVotedUsers = [];
             this.votingMembers.forEach(function(user) {
                 if(!Utils.ContainsObject(this.votedUsers, user)) {
-                    this.notVotedUses.push(user);
+                    this.notVotedUsers.push(user);
                 }
             }.bind(this));
         },
@@ -125,7 +125,13 @@ var onScripStartLoading = function() {
             return this.answers;
         },
         GetNotVotedUsers: function () {
-            return this.notVotedUses;
+            return this.notVotedUsers;
+        },
+        GetUndecidedVoters: function () {
+            return this.undecidedVoters;
+        },
+        GetNegativeVotedUsers: function () {
+            return this.negativeVotedUsers;
         },
         //setters getters
         getAnswerIds: function() {
@@ -139,6 +145,6 @@ var onScripStartLoading = function() {
     var GetCreatePollVotersData = function(poll) {
         return new PollVotersData(poll);
     };
-    DataSources.PollDataSource = PollVotersData;
+    DataSources.PollVotersData = PollVotersData;
     DataSources.GetCreatePollVotersData = GetCreatePollVotersData;
 }());

@@ -113,12 +113,12 @@ var Utils = {};
             this.promises.push(promise);
         },
         ProcessQueue: function() {
-            var delay = 2000;
+            var delay = 3000;
             var item = null;
             while(!this.IsEmpty()) {
                 item = this.items.shift();
                 this.createPromiseForItem(item, delay);
-                delay += 2000;
+                delay += 3000;
             }
             Promise.all(this.promises).then(this.onQueueProcessed);
         },
